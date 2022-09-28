@@ -44,7 +44,7 @@ class OPERACIONES:
         self.bruto = 0
         self.tara = 0
 
-class PRODUCTOS:
+class prod:
     def __init__(self):
         self.codprod = 0
         self.nomprod = " "
@@ -101,14 +101,81 @@ def carga_Productos():
 
 def primeraVez():
     print("\nBienvenidos a nuestro programa. Gracias por elegirnos. \nAntes de comenzar debemos realizar unos pequeños ajustes.\n")
-    open_productos()
-    carga_Productos()
+#    open_productos()
+#    carga_Productos()
 
 if not os.path.exists("files"):
     os.makedirs("files")
     primeraVez()
 
+######### AGREGO LA PARTE QUE HIZO RAMA #########
 
+def alta_productos():
+    Regpro = prod()
+    rta='S'
+    while rta=='S':
+        pro= input("Ingrese un producto: ")
+    while Regpro.nom=="" or Regpro.nom==" " or Regpro.nom==None:
+        pro=input("Ingrese un producto: ")
+        pro=pro.upper
+#Busco si el producto ya se encuentra en el registro. Retorna bandera
+    if busco_prod(pro,Regpro,Alp,Alf):
+        print("El producto ya se encuentra ingresado, intente nuevamente")
+    else:    
+        tcod= input("Ingrese código de producto: ")
+        Regpro.nom== pro
+        Regpro.cod== cod
+        Formatearprod(Regpro)
+        Alp.seek(0,2)
+        pickle.dump(Regpro, Alp)
+        Alp.flush()
+    rta= input("Desea ingresar otro Puntaje? S-si   N-no: ").upper()
+    while rta != "S" and rta != "N":
+        rta = input("Por favor, solo S para Si o N para No:").upper()
+    
+def busco_prod(x,reg,al,af):
+    ban=False
+    reg=producto()
+    fin= os.path.getsize(af)
+    al.seek(0)
+    while al.tell() < fin y ban=False
+        puntero=al.tell
+        reg=pickle.load(al)
+        if reg.nom=x
+            Ban= True
+        else:
+            Ban= False
+    return Busco_prod=Ban # acá debería ir úncamente la variable a retornar (Ban)
+
+def baja_prod():
+    mostrar_productos()
+    rta='S'
+    while rta=='S':
+        cod=input("Ingrese el codigo de producto a borrar -> ")
+#Busco si ya ingresó un camión con ese producto
+        if busco_prod(cod,Regop,Alo,Afo) :
+            print("Un camion ya ha ingresado con este producto, por lo tanto no se puede borrar.")
+        else:
+            Regpro.nom==""
+            Regpro.cod==""
+            print("Un camion ya ha ingresado con este producto, por lo tanto no se puede borrar.")
+            rta= input("Desea eliminar un producto? S-si   N-no: ").upper()
+            while rta != "S" and rta != "N":
+                rta = input("Por favor, solo S para Si o N para No:").upper()
+
+def busco_prod_cam (x,reg,al,af):
+    ban=False
+    reg=producto()
+    fin= os.path.getsize(af)
+    al.seek(0)
+    while al.tell() < fin y ban=False
+        puntero=al.tell
+        reg=pickle.load(al)
+        if reg.cod=x
+        Ban= True
+    else:
+        Ban= False
+    return Busco_prod=ban
 
 
 def menu_princ():
