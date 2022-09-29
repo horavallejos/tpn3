@@ -65,40 +65,42 @@ def validarFecha():
 
 #### CREAMOS LOS ARCHIVOS ####
 
-class OPERACIONES:
+class op:
     def __init__(self):
-        self.patente = " "
-        self.codprod = 0
-        self.fechacupo = " "
-        self.estado = " "
-        self.bruto = 0
+        self.pat = ""
+        self.cod_prod = 0
+        self.fecha = ""
+        self.es = ""
+        self.pesob = 0
         self.tara = 0
 
 class prod:
-    def __init__(self):
-        self.codprod = 0
-        self.nomprod = " "
-        self.estado = "A" # A=ALTA - B=BAJA
+    def _init__(self):
+        self.cod_prod = 0
+        self.nom_prod = ""
+        self.es = False
 
-class RUBROS:
+class silo:
     def __init__(self):
-        self.codrub = 0
-        self.nomrub = " "
-
-class RUBxPROD:
-    def __init__(self):
-        self.codrub = 0
-        self.codprod = 0
-        self.rubro1 = 0
-        self.rubro2 = 0
-        self.rubro3 = 0
-
-class SILOS:
-    def __init__(self):
-        self.codsilo = 0
-        self.nomsilo = " "
-        self.codprod = 0
+        self.cod_silo = 0
+        self.nom_silo = ""
+        self.cod_prod = 0
         self.stock = 0
+
+class rubro:
+    def __init__(self):
+        self.nom_rubro = ""
+        self.cod_rubro = 0
+
+class rubrop:
+    def __init__(self):
+        self.cod_rubro = 0
+        self.cod_prod = 0
+        self.min = 0.0
+        self.max = 0.0
+        self.rub1 = ""
+        self.rub2 = ""
+        self.rub3 = ""
 
 #####################################################
 
