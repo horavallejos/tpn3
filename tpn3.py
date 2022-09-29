@@ -33,6 +33,36 @@ def verificar(op):
     return op
 
 
+def validaRangoEntero(nro, min,max):
+    try:              
+        nro = int(nro)      
+        if nro >= min and nro <= max:
+            return False 
+        else:
+            return True  
+    except:
+        return True  
+
+
+def validarChar(min, max):
+    letra = input("Ingrese opcion ['a'-'f']: ").lower()
+    while letra >max or letra <min:
+        letra = input("Ingrese opcion ['a'-'f']: ").lower()
+    return letra
+
+
+def validarFecha():
+    flag = True
+    while flag:
+        try:
+            fecha = input("Ingresa una fecha en el formato DD/MM/AAAA: ")
+            datetime.datetime.strptime(fecha, '%d/%m/%Y')
+            print("Fecha valida")
+            flag = False
+        except ValueError:
+            print("Fecha invalida")
+    return fecha
+
 #### CREAMOS LOS ARCHIVOS ####
 
 class OPERACIONES:
