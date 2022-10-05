@@ -109,23 +109,30 @@ def alta_productos():
     os.system('cls')
     print(" OPCION A - Alta de Productos ")
     print(" -----------------------------\n ")
-    pro=input("ingrese el producto [hasta 15 carcateres] :  ")
-    while len(pro)<3 or len(pro)>=15:
-        pro=input("ERROR. Ingrese el producto [hasta 15 carcateres] :  ")
-    pro=pro.upper()
-    RegProd=prod()
-    if buscaProducto(pro) == -1:
-        RegProd.cod_prod=cant_prod()+1
-        RegProd.nom_prod=pro
-        RegProd.est="A"
-        AL_PROD.seek(0,2)
-        formatProd(RegProd)
-        pickle.dump(RegProd,AL_PROD)
-        AL_PROD.flush()
-        print(f"El producto {pro} fue registrado con éxito... \n ")
-    else:
-        print("El producto ya se encuentra registrado. Verifique el estado")
-    os.system('pause')
+    rta='S'
+    while rta=='S':
+        os.system('cls')
+        pro=input("ingrese el producto [hasta 15 carcateres] :  ")
+        while len(pro)<3 or len(pro)>=15:
+            pro=input("ERROR. Ingrese el producto [hasta 15 carcateres] :  ")
+        pro=pro.upper()
+        RegProd=prod()
+        if buscaProducto(pro) == -1:
+            RegProd.cod_prod=cant_prod()+1
+            RegProd.nom_prod=pro
+            RegProd.est="A"
+            AL_PROD.seek(0,2)
+            formatProd(RegProd)
+            pickle.dump(RegProd,AL_PROD)
+            AL_PROD.flush()
+            print(f"El producto {pro} fue registrado con éxito... \n ")
+        else:
+            print("El producto ya se encuentra registrado. Verifique el estado\n")
+        
+        rta= input("Desea ingresar otro producto? S-si   N-no: ").upper()
+        while rta != "S" and rta != "N":
+            rta = input("Por favor, solo S para Si o N para No:").upper()
+        
 
 
 def buscaProducto(pro):
@@ -139,8 +146,155 @@ def buscaProducto(pro):
             return pos
     return -1
 
-def mostrar_productos():
-    pass
+def buscaProducto_cod(cod):
+    t = os.path.getsize(AF_PROD)
+    AL_PROD.seek(0)
+    ban=False
+    while AL_PROD.tell()<t and ban== False:
+        pos = AL_PROD.tell()
+        rProd = pickle.load(AL_PROD)
+        if int(rProd.cod_prod) == int(cod):
+            return pos
+    return -1
+
+def busco_prod_cam(x):
+    fin= os.path.getsize(AF_OP)
+    if fin==0:
+        return False
+    else:
+        ban=False
+        Regop= op()
+        Regop=pickle.load(AL_OP)
+        
+        AL_OP.seek(0)
+        while AL_OP.tell() < fin and ban==False:
+            Regop=pickle.load(AL_OP)
+            if int(Regop.cod_prod)==int(x):
+                ban=True
+                return ban
+        return False
+
+def baja_prod():
+    global AF_PROD, AL_PROD
+    os.system('cls')
+    t=os.path.getsize(AF_PROD)
+    if t==0:
+        print("No hay productos para Borrar")
+        os.system('pause')
+    else:
+        rta='S'
+        while rta=='S':
+            mostrar_productos_all()
+            cantp=cant_prod()
+            cod=input(f"Ingrese el codigo de producto a borrar -> ")
+            while validaRangoEntero(cod,1,cantp):
+                cod=input(f"Ingrese el codigo de producto a borrar -> ")
+            cod=int(cod)
+            #Busco si ya ingresó un camión con ese producto
+            if busco_prod_cam(cod):
+                print("Un camion ya ha ingresado con este producto, por lo tanto no se puede borrar.")
+            else:
+                pos=buscaProducto_cod(cod)
+                rPro=prod()
+                AL_PROD.seek(pos,0)
+                rPro=pickle.load(AL_PROD)
+                rPro.est="B"
+                AL_PROD.seek(pos)
+                pickle.dump(rPro,AL_PROD)
+                AL_PROD.flush()
+                print("Baja existosa.")
+
+            rta= input("Desea eliminar otro producto? S-si   N-no: ").upper()
+            while rta != "S" and rta != "N":
+                rta = input("Por favor, solo S para Si o N para No:").upper()
+
+       
+
+def modifica_prod():
+    global AF_PROD, AL_PROD
+    os.system('cls')
+    t=os.path.getsize(AF_PROD)
+    if t==0:
+        print("No hay productos para Modificar")
+        os.system('pause')
+    else:
+        rta='S'
+        while rta=='S':
+            mostrar_productos_all()
+            cantp=cant_prod()
+            cod=input(f"Ingrese el codigo de producto a Modificar -> ")
+            while validaRangoEntero(cod,1,cantp):
+                cod=input(f"ERROR. Ingrese el codigo de producto a Modificar -> ")
+            cod=int(cod)
+            #Busco si ya ingresó un camión con ese producto
+            if busco_prod_cam(cod):
+                print("Un camion ya ha ingresado con este producto, por lo tanto no se puede Modificar.")
+            else:
+                pos=buscaProducto_cod(cod)
+                rPro=prod()
+                AL_PROD.seek(pos,0)
+                rPro=pickle.load(AL_PROD)
+                cambia_nom=input("Desea Cambiar el nombre? [S = cambia] [N = No cambia] ").upper()
+                while cambia_nom!="S" and cambia_nom!="N":
+                    cambia_nom=input("Desea Cambiar el nombre? [S = cambia] [N = No cambia] ").upper()
+                if cambia_nom=="S":
+                    nom=input("Modifique el nombre del producto: ").upper()
+                    while len(nom)<3 or len(nom)>15:
+                        nom=input("ERROR. Nombre de Producto entre 3 y 15 caracteres").upper()
+                    rPro.nom_prod=nom.ljust(15)
+                    
+                cambia_est=input("Desea Cambiar el Estado? [S = cambia] [N = No cambia] ").upper()
+                while cambia_est!="S" and cambia_est!="N":
+                    cambia_est=input("Desea Cambiar el Estado? [S = cambia] [N = No cambia] ").upper()
+                if cambia_est=="S":
+                    if rPro.est=="A":
+                        rPro.est="B"
+                    else:
+                        rPro.est="A"
+                AL_PROD.seek(pos)
+                pickle.dump(rPro,AL_PROD)
+                AL_PROD.flush()
+                print("Modificación existosa.")
+                mostrarProd(rPro)
+
+            rta= input("Desea Modificar otro producto? S-si   N-no: ").upper()
+            while rta != "S" and rta != "N":
+                rta = input("Por favor, solo S para Si o N para No:").upper() 
+
+def mostrar_productos_all(): # MUESTRA TODOS LOS PRODUCTOS
+    global AF_PROD, AL_PROD
+    os.system('cls')
+    t=os.path.getsize(AF_PROD)
+    if t==0:
+        print("No hay productos para mostrar")
+        os.system('pause')
+    else:
+        rProd=prod()
+        print("-----------------------------------------")
+        print(" CodPro - Producto  - Estado ")
+        AL_PROD.seek(0)
+        while AL_PROD.tell()<t:
+            rProd=pickle.load(AL_PROD)
+            mostrarProd(rProd)
+    
+
+def mostrar_productos(): # MUESTRA PRODUCTOS ACTIVOS
+    global AF_PROD, AL_PROD
+    os.system('cls')
+    t=os.path.getsize(AF_PROD)
+    if t==0:
+        print("No hay productos para mostrar")
+        os.system('pause')
+    else:
+        rProd=prod()
+        print("-----------------------------------------")
+        print(" CodPro - Producto  - Estado ")
+        AL_PROD.seek(0)
+        while AL_PROD.tell()<t:
+            rProd=pickle.load(AL_PROD)
+            if rProd.est=="A":
+                mostrarProd(rProd)
+    os.system('pause')
 
 
 
