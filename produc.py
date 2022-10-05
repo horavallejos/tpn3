@@ -39,6 +39,22 @@ class rubrop:
         self.min = 0.0
         self.max = 0.0
 
+##################### EMBELLECEDORES ####################
+
+#  VARIABLES COLORES
+BLUE = '\033[94m'
+WHITE = '\033[0m'
+RED = '\033[91m'
+
+#  LIMPIAR PANTALLA
+def limpia_pant():
+    if os.name == "posix":
+        os.system ("clear")
+    elif os.name == "ce" or os.name == "nt" or os.name == "dos":
+        os.system ("cls")     
+
+############## MODULOS DEL PROGRAMA ################
+
 def validaRangoEntero(nro, min,max):
     try:              
         nro = int(nro)      
@@ -49,6 +65,34 @@ def validaRangoEntero(nro, min,max):
     except:
         return True  
 
+def validarChar(min, max):
+    letra = input("Ingrese opcion ['a'-'f']: ").lower()
+    while letra >max or letra <min:
+        letra = input("Ingrese opcion ['a'-'f']: ").lower()
+    return letra
+
+def validarFecha():
+    flag = True
+    while flag:
+        try:
+            fecha = input("Ingresa una fecha en el formato DD/MM/AAAA: ")
+            datetime.datetime.strptime(fecha, '%d/%m/%Y')
+
+            #### De paso también formateo la fecha
+            mes,anio = fecha.split('/') # separo en día,mes,anio
+            if len(dia)==1: # si la longitud ingresada es igual a 1...
+                dia=dia.rjust(2,'0') # ... justifico a la derecha y le agrego cero
+            if len(mes)==1:
+                mes=mes.rjust(2,'0')
+            fecha=[dia,mes,anio] # pongo dentro de una lista para pasarla al comando Join
+            fecha='/'.join(fecha) # uso el comando Join para unir con una barra de separador
+            print("Fecha valida") # de esta manera la fecha siempre tendrá longitud 10
+        
+            flag = False
+        
+        except ValueError:
+            print("Fecha invalida")
+    return fecha
 
 def formatOp(vrOp):
     vrOp.pat= vrOp.pat.ljust(7)
@@ -63,10 +107,9 @@ def formatOp(vrOp):
 
 def formatProd(vrProd):
    vrProd.cod_prod = str(vrProd.cod_prod)
-   vrProd.cod_prod = vrProd.cod_prod.ljust(2)
-   vrProd.nom_prod = vrProd.nom_prod.ljust(15)
-   # vrProd.est = vrProd.est.ljust(1) No es necesario. Asignación Interna
-   # Y siempre va a ser una sola letra
+   vrProd.cod_prod = vrProd.cod_prod.ljust(2, ' ')
+   vrProd.nom_prod = vrProd.nom_prod.ljust(15, ' ')
+   vrProd.est = vrProd.est.ljust(2, ' ')
 
 def formatRub(vrRub):
     vrRub.nom_rub = vrRub.nom_rubro.ljust(20)
@@ -92,57 +135,191 @@ def formatSilo(vrSilo):
     vrSilo.stock = str(vrSilo.stock)
     vrSilo.stock = vrSilo.stock.ljust(5)
 
-##########################################################
+############### RAMA #################
 
-def cant_prod():
-    t=os.path.getsize(AF_PROD)
-    if t==0:
-        return 0
-    else:
-        AL_PROD.seek(0)
-        pickle.load(AL_PROD)
-        aux=AL_PROD.tell()
-        cant_reg=t//aux
-        return cant_reg
+Regpro= prod()
+#afProductos alProductos
+
+def Formatearprod(prod):
+    prod.cod_prod = str(prod.cod_prod)
+    prod.cod_prod = prod.cod_prod.ljust(2)
+    prod.nom_prod = prod.nom_prod.ljust(20)
+    prod.est = prod.est.ljust(1)
+# Inicio contador en 0 para luego asignarlo como codigo incrementandolo antes de asignarlo al campo, hago alta y busco si este ya fue ingresado. En caso de que no: Asigno el input...
+# Asigno contador, cambio bandera del campo estado a verdadero para tener un alta logica y empujo el puntero al proximo registro para cuando tenga que registrar otro.
+Con = 0
+
+def siono(x):
+    if x == " " or "" or None:
+        return True
+    if x== 'S' or 's' or 'N' or 'n':
+        return False
+
 
 def alta_productos():
+    global AF_PROD,AL_PROD
     os.system('cls')
-    print(" OPCION A - Alta de Productos ")
-    print(" -----------------------------\n ")
-    pro=input("ingrese el producto [hasta 15 carcateres] :  ")
-    while len(pro)<3 or len(pro)>=15:
-        pro=input("ERROR. Ingrese el producto [hasta 15 carcateres] :  ")
-    pro=pro.upper()
-    RegProd=prod()
-    if buscaProducto(pro) == -1:
-        RegProd.cod_prod=cant_prod()+1
-        RegProd.nom_prod=pro
-        RegProd.est="A"
-        AL_PROD.seek(0,2)
-        formatProd(RegProd)
-        pickle.dump(RegProd,AL_PROD)
-        AL_PROD.flush()
-        print(f"El producto {pro} fue registrado con éxito... \n ")
-    else:
-        print("El producto ya se encuentra registrado. Verifique el estado")
-    os.system('pause')
+    Regpro=prod()
+    rta='S'
+    while rta=='S':
+        pro= input("ingrese un producto: ")
+        while pro=="" or pro==" " or pro==None:
+            pro=input("Ingrese un producto: ")
+            pro=pro.upper
+        #Busco si el producto ya se encuentra en el registro. Retorna bandera
+        if busco_prod(pro)== -1:
+            global Con, AF_PROD, AL_PROD
+            Regpro=prod()
+            Regpro.cod_prod = str(int(Con+1)).ljust(2)
+            Regpro.nom_prod = pro
+            Regpro.est = "A"
+            formatProd(Regpro)
+            AL_PROD.seek(0,2)
+            pickle.dump(Regpro, AL_PROD)
+            AL_PROD.flush()
+            print(f"Se ha agregado correctamente el producto {pro}. ")
+            os.system('pause')
+
+        else:
+            if Regpro.est == "B":
+                    print(f"El producto {Regpro.nom_prod} se encuentra registrado, pero dado de BAJA\n")
+                    estado=input(f'Desea volver poner a {Regpro.nom_prod} como ACTIVO? S para SI. N para NO. ->  ')
+                    while siono(estado):
+                        estado=input("Ingrese una opción válida, S para ACTIVAR. N para Seguir de BAJA ->  ")
+                    estado=estado.upper
+                    if estado=="S":
+                        pos=busco_prod(pro)
+                        AL_PROD.seek(pos,0)
+                        Regpro = pickle.load(AL_PROD)
+                        Regpro.est="A"
+                        AL_PROD.seek(pos,0)
+                        pickle.dump(Regpro,AL_PROD)
+                        AL_PROD.flush()
+                    else:
+                        print(f"El producto {Regpro.nom_prod} quedó con estado= BAJA. \n")
+            else:
+                print(f"El producto {Regpro.nom_prod} ya se encuentra registrado. ")
 
 
-def buscaProducto(pro):
-    t = os.path.getsize(AF_PROD)
-    AL_PROD.seek(0)
+
+        rta= input("desea ingresar otro Producto? S-si   N-no: ").upper()
+        while rta != "S" and rta != "N":
+            rta = input("Por favor, solo S para Si o N para No:").upper()
+
+
+    
+
+
+def busco_prod(x):
+    global AF_PROD, AL_PROD
+    fin= os.path.getsize(AF_PROD) 
     ban=False
-    while AL_PROD.tell()<t and ban== False:
-        pos = AL_PROD.tell()
-        rProd = pickle.load(AL_PROD)
-        if rProd.nom_prod.strip() == pro:
-            return pos
-    return -1
+    RegProd= prod()
+    AL_PROD.seek(0,0)
+    while AL_PROD.tell() < fin and ban==False:
+        pos=AL_PROD.tell()
+        RegProd = pickle.load(AL_PROD)
+        if RegProd.nom_prod==x:
+            ban= True
+    if ban:
+        return pos
+    else:
+        return -1
 
-def mostrar_productos():
-    pass
 
+##############################################################
+### BORARRARRRRRRRRRRRRRRRRRR
+def buscaAve(nA):
+    global ArcFisiAves, ArcLogAves 
+    t = os.path.getsize(ArcFisiAves)
+    rAve = Ave()
+    band = False
+    ArcLogAves.seek(0) 
+    while ArcLogAves.tell()<t and band== False:
+        pos = ArcLogAves.tell()
+        rAve = pickle.load(ArcLogAves)
+        if int(rAve.nro) == nA:
+            band = True
+    if band:
+        return pos
+    else:
+        return -1
+###RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
 
+def baja_prod():
+    #mostrar_productos()
+    rta='S'
+    while rta=='S':
+        cod=input("Ingrese el codigo de producto a borrar -> ")
+    #Busco si ya ingresó un camión con ese producto
+        if busco_prod_cam (cod) == 1:
+            print("Un camion ya ha ingresado con este producto, por lo tanto no se puede borrar.")
+        else:
+            Regpro.es== False
+    rta= input("Desea eliminar un producto? S-si   N-no: ").upper()
+    while rta != "S" and rta != "N":
+        rta = input("Por favor, solo S para Si o N para No:").upper()
+
+    def busco_prod_cam (x):
+        ban=False
+        Regop= op()
+        fin= os.path.getsize(afOperaciones)
+        alOperaciones.seek(0)
+        while alOperaciones.tell() < fin and ban==False:
+            puntero=alOperaciones.tell
+            Regop=pickle.load(alOperaciones)
+            if Regop.cod_prod==x:
+                ban== True
+        if ban:
+            return 1
+        else:
+            return 0
+
+Regrub= rubro()
+#afRubros alRubros
+def Formatearrub(rub):
+    rubro.cod_rub = (prod.cod).ljust(2)
+    rubro.nom_rub = str(prod.nom).ljust(20, ' ')
+# Inicio contador en 0 para luego asignarlo como codigo incrementandolo antes de asignarlo al campo, hago alta y busco si este ya fue ingresado. En caso de que no: Asigno el input...
+# Asigno contador, cambio bandera del campo estado a verdadero para tener un alta logica y empujo el puntero al proximo registro para cuando tenga que registrar otro.
+Con1 = 0
+def alta_rubros():
+    rta="S"
+    while rta=='S':
+            rub= input("ingrese un producto: ")
+            while Regrub.nom_rub=="" or Regrub.nom_rub==" " or Regrub.nom_rub==None:
+                rub=input("Ingrese un producto: ")
+                rub=rub.upper
+#Busco si el producto ya se encuentra en el registro. Retorna bandera
+                if busco_rub(rub)== 1:
+                    print("El producto ya se encuentra ingresado, intente nuevamente")
+                else:    
+                    Regrub.nom_rub == rub
+                    Con1 == Con1 +1
+                    Regpro.cod_prod == Con1
+                Formatearrub(Regrub)
+                alRubros.seek(0,2)
+                pickle.dump(Regrub, alRubros)
+                alRubros.flush()
+            rta= input("desea ingresar otro Puntaje? S-si   N-no: ").upper()
+            while rta != "S" and rta != "N":
+                rta = input("Por favor, solo S para Si o N para No:").upper()
+    
+def busco_rub(x):
+    global afRubros, alRubros
+    fin= os.path.getsize(afRubros) 
+    ban=False
+    Regrub= rub()
+    alRubros.seek(0)
+    pun== alRubros.tell
+    while pun < fin and ban==False:
+        Regpro = pickle.load(alRubros)
+        if Regrub.nom_rub==x:
+            Ban= True
+    if ban:
+        return 1
+    else:
+        return 0
 
 ##########################################################
 
@@ -156,7 +333,7 @@ def menu_princ():
     print("                         # 3 - RECEPCION")
     print("                         # 4 - REGISTRAR CALIDAD")
     print("                         # 5 - REGISTRAR PESO BRUTO")
-    print("                         # 6 - ARCHIVOS")
+    print("                         # 6 - REGISTRAR DESCARGA")
     print("                         # 7 - REGISTRAR TARA")
     print("                         # 8 - REPORTES")
     print("                         # 9 - SILOS")
@@ -196,129 +373,15 @@ def menu_crud():
     print("                         ##################################")
     print("" )
 
-def menu_Archivos():
-    print( "")
-    print("                         ##################################")
-    print("                         | 6- MENU TEMP PARA VER ARCHIVOS |")
-    print("                         ##################################")
-    print("                         # 1 - Operaciones")
-    print("                         # 2 - Productos")
-    print("                         # 3 - Rubros")
-    print("                         # 4 - Rubros x Productos")
-    print("                         # 5 - Silos")
-    print("                         # 0 - Volver al Menu Anterior")
-    print("                         ----------------------------------")
-    print("                         ##################################")
-    print("" )
-
-def mostrarOp(x):
-    print(x.pat," - ",x.cod_prod," - ",x.fecha," - ",x.est," - ",x.pesob," - ",x.tara)
-
-def mostrarProd(x):
-    print(x.cod_prod," - ",x.nom_prod," - ",x.est)
-
-def archivos():
-    flag=True
-    while flag==True:
-        
-        menu_Archivos()
-        opcion=input( "\n--> Ingrese la opción que desea usar, o 0 para volver al menú anterior: \n--> " )
-        while opcion<"0" and opcion>"5":
-            opcion=input( "\n--> Ingrese la opción que desea usar, o 0 para volver al menú anterior: \n--> " )
-        
-        if opcion == "1":
-            global AF_OP, AL_OP
-            os.system('cls')
-            print(" OPCION 1 - MOSTRAR ARCHIVO OPERACIONES ")
-            print(" ------------------------------------\n ")
-            t=os.path.getsize(AF_OP)
-            if t==0:
-                print("El archivo está vacío")
-                os.system('pause')
-            else:
-                print("-------------------------------------------------")
-                print(" Patente CodPro Fecha     Est  PesoB   Tara   ")
-                AL_OP.seek(0)
-                while AL_OP.tell()<t:
-                    rOp=pickle.load(AL_OP)
-                    mostrarOp(rOp)
-                AL_OP.seek(0)
-                rOp=pickle.load(AL_OP)
-                aux=AL_OP.tell()
-                cant_reg=t//aux
-                print("\nTamaño de registro = ",aux," - Cantidad de Registros = ", cant_reg)
-                os.system('pause')
-                      
-
-        elif opcion == "2":
-            global AF_PROD, AL_PROD
-            os.system('cls')
-            print(" OPCION 2 - MOSTRAR ARCHIVO PRODUCTOS ")
-            print(" ------------------------------------\n ")
-            t=os.path.getsize(AF_PROD)
-            if t==0:
-                print("El archivo está vacío")
-                os.system('pause')
-            else:
-                print("-----------------------------------------")
-                print(" CodPro - Producto  - Estado ")
-                AL_PROD.seek(0)
-                while AL_PROD.tell()<t:
-                    rProd=pickle.load(AL_PROD)
-                    mostrarProd(rProd)
-                AL_PROD.seek(0)
-                pickle.load(AL_PROD)
-                aux=AL_PROD.tell()
-                cant_reg=t//aux
-                print("\nTamaño de registro = ",aux," - Cantidad de Registros = ", cant_reg)
-                os.system('pause')
-
-        elif opcion == "3":
-            
-            print( "                        #####################################################")
-            print("                        #####################################################")
-            print("                        ##                                                 ##")
-            print("                        ##             ARCHIVO RUBROS                      ##")
-            print("                        ##                                                 ##")
-            print("                        #####################################################")
-            print("                        #####################################################" )
-            os.system('pause')
-
-        elif opcion == "4":
-            
-            print( "                        #####################################################")
-            print("                        #####################################################")
-            print("                        ##                                                 ##")
-            print("                        ##           ARCHIVO RUBRO POR PRODUCTOS           ##")
-            print("                        ##                                                 ##")
-            print("                        #####################################################")
-            print("                        #####################################################")
-            os.system('pause')
-
-        elif opcion == "5":
-            
-            print( "                        #####################################################")
-            print("                        #####################################################")
-            print("                        ##                                                 ##")
-            print("                        ##           ARCHIVO SILOS                         ##")
-            print("                        ##                                                 ##")
-            print("                        #####################################################")
-            print("                        #####################################################")
-            os.system('pause')
-
-        elif opcion == "0":
-            flag=False
-
-
 def crud():
-    flag=True
-    while flag==True:
-        
+    flag2=True
+    while flag2==True:
+        limpia_pant()
         menu_crud()
         opcion=input( "\n--> Ingrese la opción que desea usar, o V para volver al menú anterior: \n--> " )
             
         if opcion == "A" or opcion == "a":
-            
+            limpia_pant()
             print( "")
             print("                          #####################################################")
             print("                          #####################################################")
@@ -327,10 +390,10 @@ def crud():
             print("                          ##                                                 ##")
             print("                          #####################################################")
             print("                          #####################################################")
-            
+            pulse_Tecla()
 
         elif opcion == "B" or opcion == "b":
-            
+            limpia_pant()
             print("                         #####################################################")
             print("                         #####################################################")
             print("                         ##                                                 ##")
@@ -338,10 +401,10 @@ def crud():
             print("                         ##                                                 ##")
             print("                         #####################################################")
             print("                         #####################################################")
-            
+            pulse_Tecla()
 
         elif opcion == "C" or opcion == "c":
-            
+            limpia_pant()
             print( "                        #####################################################")
             print("                        #####################################################")
             print("                        ##                                                 ##")
@@ -349,10 +412,10 @@ def crud():
             print("                        ##                                                 ##")
             print("                        #####################################################")
             print("                        #####################################################" )
-            
+            pulse_Tecla()
 
         elif opcion == "M" or opcion == "m":
-            
+            limpia_pant()
             print( "                        #####################################################")
             print("                        #####################################################")
             print("                        ##                                                 ##")
@@ -360,32 +423,33 @@ def crud():
             print("                        ##                                                 ##")
             print("                        #####################################################")
             print("                        #####################################################")
-            
+            pulse_Tecla()
             
         elif opcion == "V" or opcion == "v":
-            flag=False
+            flag2=False
 
 def crud_productos():
     flag=True
     while flag==True:
-        
+        limpia_pant()
         menu_crud()
         opcion=input( "\n--> Ingrese la opción que desea usar, o V para volver al menú anterior: \n--> " )
         
         if opcion == "A" or opcion == "a":
-            
+            limpia_pant()
             alta_productos()
-                              
+            os.system('pause')
+                  
         elif opcion == "B" or opcion == "b":
-           
+            limpia_pant()
             baja_prod()
         
         elif opcion == "C" or opcion == "c":
-          
+            limpia_pant()
             mostrar_productos()
         
         elif opcion == "M" or opcion == "m":
-           
+            limpia_pant()
             modifica_prod()
         
         elif opcion == "V" or opcion == "v":
@@ -394,7 +458,7 @@ def crud_productos():
 def administraciones():
     flag=True
     while flag==True:
-        os.system('cls')
+        limpia_pant()
         menu_01_administraciones()
         opcion=input( "\n--> Ingrese de la A a la G según la opción que desea usar, o V para volver al menú anterior: \n--> " )
         if opcion == "A" or opcion == "a":
@@ -423,14 +487,14 @@ def administraciones():
 
 ################ PROGRAMA PRINCIPAL #######################
 
-AF_OP = "TP3F\\OPERACIONES.DAT"
-AF_PROD = "TP3F\\PRODUCTOS.DAT"
-AF_RUBRO = "TP3F\\RUBROS.DAT"
-AF_RUBROP = "TP3F\\RUBXPROD.DAT"
-AF_SILOS = "TP3F\\SILOS.DAT"
+AF_OP = "TP3\\OPERACIONES.DAT"
+AF_PROD = "TP3\\PRODUCTOS.DAT"
+AF_RUBRO = "TP3\\RUBROS.DAT"
+AF_RUBROP = "TP3\\RUBXPROD.DAT"
+AF_SILOS = "TP3\\SILOS.DAT"
 
-if not os.path.exists('TP3F'):
-    os.makedirs('TP3F')
+if not os.path.exists('TP3'):
+    os.makedirs('TP3')
 
 #####estoy probando,me falta todavia#####
 
@@ -461,7 +525,7 @@ else:
 
 flag=True
 while flag==True:
-    os.system('cls')    
+    limpia_pant()    
     menu_princ()
     
     op=input("ingrese un valor entre 1 y 9, o 0 -> ")
@@ -479,7 +543,7 @@ while flag==True:
     elif op == "5":
         peso_bruto()
     elif op == "6":
-        archivos()
+        print("Funcionalidad en CONSTRUCCION")
     elif op == "7":
         peso_tara()
     elif op == "8":
