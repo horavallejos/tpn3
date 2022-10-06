@@ -185,27 +185,31 @@ def baja_prod():
         while rta=='S':
             mostrar_productos_all()
             cantp=cant_prod()
-            cod=input(f"Ingrese el codigo de producto a borrar -> ")
-            while validaRangoEntero(cod,1,cantp):
-                cod=input(f"Ingrese el codigo de producto a borrar -> ")
+            cod=input(f"Ingrese el codigo de producto a borrar o 0 para no modificar nada -> ")
+            while validaRangoEntero(cod,0,cantp):
+                cod=input(f"Ingrese el codigo de producto a borrar o 0 para no modificar nada -> ")
             cod=int(cod)
-            #Busco si ya ingresó un camión con ese producto
-            if busco_prod_cam(cod):
-                print("Un camion ya ha ingresado con este producto, por lo tanto no se puede borrar.")
-            else:
-                pos=buscaProducto_cod(cod)
-                rPro=prod()
-                AL_PROD.seek(pos,0)
-                rPro=pickle.load(AL_PROD)
-                rPro.est="B"
-                AL_PROD.seek(pos)
-                pickle.dump(rPro,AL_PROD)
-                AL_PROD.flush()
-                print("Baja existosa.")
+            if cod!=0:
+                #Busco si ya ingresó un camión con ese producto
+                if busco_prod_cam(cod):
+                    print("Un camion ya ha ingresado con este producto, por lo tanto no se puede borrar.")
+                else:
 
-            rta= input("Desea eliminar otro producto? S-si   N-no: ").upper()
-            while rta != "S" and rta != "N":
-                rta = input("Por favor, solo S para Si o N para No:").upper()
+                    pos=buscaProducto_cod(cod)
+                    rPro=prod()
+                    AL_PROD.seek(pos,0)
+                    rPro=pickle.load(AL_PROD)
+                    rPro.est="B"
+                    AL_PROD.seek(pos)
+                    pickle.dump(rPro,AL_PROD)
+                    AL_PROD.flush()
+                    print("Baja existosa.")
+            
+                rta= input("Desea eliminar otro producto? S-si   N-no: ").upper()
+                while rta != "S" and rta != "N":
+                    rta = input("Por favor, solo S para Si o N para No:").upper()
+            else:
+                rta="N"
 
 def modifica_prod():
     global AF_PROD, AL_PROD
@@ -219,44 +223,47 @@ def modifica_prod():
         while rta=='S':
             mostrar_productos_all()
             cantp=cant_prod()
-            cod=input(f"Ingrese el codigo de producto a Modificar -> ")
-            while validaRangoEntero(cod,1,cantp):
-                cod=input(f"ERROR. Ingrese el codigo de producto a Modificar -> ")
+            cod=input(f"Ingrese el codigo de producto a Modificar o 0 para salir sin hacer cambios -> ")
+            while validaRangoEntero(cod,0,cantp):
+                cod=input(f"ERROR. Ingrese el codigo de producto a Modificar o 0 para salir sin hacer cambios  -> ")
             cod=int(cod)
-            #Busco si ya ingresó un camión con ese producto
-            if busco_prod_cam(cod):
-                print("Un camion ya ha ingresado con este producto, por lo tanto no se puede Modificar.")
-            else:
-                pos=buscaProducto_cod(cod)
-                rPro=prod()
-                AL_PROD.seek(pos,0)
-                rPro=pickle.load(AL_PROD)
-                cambia_nom=input("Desea Cambiar el nombre? [S = cambia] [N = No cambia] ").upper()
-                while cambia_nom!="S" and cambia_nom!="N":
+            if cod!=0:
+                #Busco si ya ingresó un camión con ese producto
+                if busco_prod_cam(cod):
+                    print("Un camion ya ha ingresado con este producto, por lo tanto no se puede Modificar.")
+                else:
+                    pos=buscaProducto_cod(cod)
+                    rPro=prod()
+                    AL_PROD.seek(pos,0)
+                    rPro=pickle.load(AL_PROD)
                     cambia_nom=input("Desea Cambiar el nombre? [S = cambia] [N = No cambia] ").upper()
-                if cambia_nom=="S":
-                    nom=input("Modifique el nombre del producto: ").upper()
-                    while len(nom)<3 or len(nom)>15:
-                        nom=input("ERROR. Nombre de Producto entre 3 y 15 caracteres").upper()
-                    rPro.nom_prod=nom.ljust(15)
-                    
-                cambia_est=input("Desea Cambiar el Estado? [S = cambia] [N = No cambia] ").upper()
-                while cambia_est!="S" and cambia_est!="N":
+                    while cambia_nom!="S" and cambia_nom!="N":
+                        cambia_nom=input("Desea Cambiar el nombre? [S = cambia] [N = No cambia] ").upper()
+                    if cambia_nom=="S":
+                        nom=input("Modifique el nombre del producto: ").upper()
+                        while len(nom)<3 or len(nom)>15:
+                            nom=input("ERROR. Nombre de Producto entre 3 y 15 caracteres").upper()
+                        rPro.nom_prod=nom.ljust(15)
+                        
                     cambia_est=input("Desea Cambiar el Estado? [S = cambia] [N = No cambia] ").upper()
-                if cambia_est=="S":
-                    if rPro.est=="A":
-                        rPro.est="B"
-                    else:
-                        rPro.est="A"
-                AL_PROD.seek(pos)
-                pickle.dump(rPro,AL_PROD)
-                AL_PROD.flush()
-                print("Modificación existosa.")
-                mostrarProd(rPro)
+                    while cambia_est!="S" and cambia_est!="N":
+                        cambia_est=input("Desea Cambiar el Estado? [S = cambia] [N = No cambia] ").upper()
+                    if cambia_est=="S":
+                        if rPro.est=="A":
+                            rPro.est="B"
+                        else:
+                            rPro.est="A"
+                    AL_PROD.seek(pos)
+                    pickle.dump(rPro,AL_PROD)
+                    AL_PROD.flush()
+                    print("Modificación existosa.")
+                    mostrarProd(rPro)
 
-            rta= input("Desea Modificar otro producto? S-si   N-no: ").upper()
-            while rta != "S" and rta != "N":
-                rta = input("Por favor, solo S para Si o N para No:").upper() 
+                rta= input("Desea Modificar otro producto? S-si   N-no: ").upper()
+                while rta != "S" and rta != "N":
+                    rta = input("Por favor, solo S para Si o N para No:").upper()
+            else:
+                rta="N" 
 
 def mostrar_productos_all(): # MUESTRA TODOS LOS PRODUCTOS
     global AF_PROD, AL_PROD
