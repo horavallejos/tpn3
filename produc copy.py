@@ -29,26 +29,17 @@ class silo:
 
 class rubro:
     def __init__(self):
-        self.nom_rub = ""
         self.cod_rub = 0
-
+        self.nom_rub = ""
+        
 class rubrop:
     def __init__(self):
-        self.cod_rub = 0
         self.cod_prod = 0
+        self.cod_rub = 0
         self.min = 0.0
         self.max = 0.0
 
-def validaRangoEntero(nro, min,max):
-    try:              
-        nro = int(nro)      
-        if nro >= min and nro <= max:
-            return False 
-        else:
-            return True  
-    except:
-        return True  
-
+##### FORMATEADORES #####
 
 def formatOp(vrOp):
     vrOp.pat= vrOp.pat.ljust(7)
@@ -69,15 +60,15 @@ def formatProd(vrProd):
    # Y siempre va a ser una sola letra
 
 def formatRub(vrRub):
-    vrRub.nom_rub = vrRub.nom_rubro.ljust(20)
-    vrRub.cod_rub = str(vrRub.cod_rubro)
-    vrRub.cod_rub = vrRub.cod_rubro.ljust(2)
+    vrRub.cod_rub = str(vrRub.cod_rub)
+    vrRub.cod_rub = vrRub.cod_rub.ljust(2)
+    vrRub.nom_rub = vrRub.nom_rub.ljust(15)
 
 def formatRxP(vrRxP):
-    vrRxP.cod_rub = str(vrRxP.cod_rub)
-    vrRxP.cod_rub = vrRxP.cod_rub.ljust(2)
     vrRxP.cod_prod = str(vrRxP.cod_prod)
     vrRxP.cod_prod = vrRxP.cod_prod.ljust(2)
+    vrRxP.cod_rub = str(vrRxP.cod_rub)
+    vrRxP.cod_rub = vrRxP.cod_rub.ljust(2)
     vrRxP.min = str(vrRxP.min)
     vrRxP.min = vrRxP.min.ljust(3)
     vrRxP.max = str(vrRxP.max)
@@ -93,6 +84,16 @@ def formatSilo(vrSilo):
     vrSilo.stock = vrSilo.stock.ljust(5)
 
 ##########################################################
+
+def validaRangoEntero(nro, min,max):
+    try:              
+        nro = int(nro)      
+        if nro >= min and nro <= max:
+            return False 
+        else:
+            return True  
+    except:
+        return True  
 
 def cant_prod():
     t=os.path.getsize(AF_PROD)
@@ -133,8 +134,6 @@ def alta_productos():
         while rta != "S" and rta != "N":
             rta = input("Por favor, solo S para Si o N para No:").upper()
         
-
-
 def buscaProducto(pro):
     t = os.path.getsize(AF_PROD)
     AL_PROD.seek(0)
@@ -208,8 +207,6 @@ def baja_prod():
             while rta != "S" and rta != "N":
                 rta = input("Por favor, solo S para Si o N para No:").upper()
 
-       
-
 def modifica_prod():
     global AF_PROD, AL_PROD
     os.system('cls')
@@ -277,7 +274,6 @@ def mostrar_productos_all(): # MUESTRA TODOS LOS PRODUCTOS
             rProd=pickle.load(AL_PROD)
             mostrarProd(rProd)
     
-
 def mostrar_productos(): # MUESTRA PRODUCTOS ACTIVOS
     global AF_PROD, AL_PROD
     os.system('cls')
@@ -296,7 +292,142 @@ def mostrar_productos(): # MUESTRA PRODUCTOS ACTIVOS
                 mostrarProd(rProd)
     os.system('pause')
 
+############### ALTA DE RUBROS ###############
 
+def cant_rub():
+    t=os.path.getsize(AF_RUBRO)
+    if t==0:
+        return 0
+    else:
+        AL_RUBRO.seek(0)
+        pickle.load(AL_RUBRO)
+        aux=AL_RUBRO.tell()
+        cant_reg=t//aux
+        return cant_reg
+
+def alta_rubros():
+    os.system('cls')
+    print(" OPCION A - Alta de RUBROS ")
+    print(" -----------------------------\n ")
+    rta='S'
+    while rta=='S':
+        os.system('cls')
+        rub=input("ingrese el Rubro [hasta 15 carcateres] :  ")
+        while len(rub)<3 or len(rub)>=15:
+            rub=input("ERROR. Ingrese el Rubro [hasta 15 carcateres] :  ")
+        rub=rub.upper()
+        rRub=rubro()
+        if buscaRubro(rub) == -1:
+            rRub.cod_rub=cant_rub()+1
+            rRub.nom_rub=rub
+            AL_RUBRO.seek(0,2)
+            formatRub(rRub)
+            pickle.dump(rRub,AL_RUBRO)
+            AL_RUBRO.flush()
+            print(f"El Rubro {rub} fue registrado con éxito... \n ")
+        else:
+            print("El Rubro ya se encuentra registrado.\n")
+        
+        rta= input("Desea ingresar otro Rubro? S-si   N-no: ").upper()
+        while rta != "S" and rta != "N":
+            rta = input("Por favor, solo S para Si o N para No:").upper()
+
+def buscaRubro(rub):
+    t = os.path.getsize(AF_RUBRO)
+    AL_RUBRO.seek(0)
+    ban=False
+    while AL_RUBRO.tell()<t and ban== False:
+        pos = AL_RUBRO.tell()
+        rRub = pickle.load(AL_RUBRO)
+        if rRub.nom_rub.strip() == rub:
+            return pos
+    return -1
+
+def buscaRubro_cod(cod):
+    t = os.path.getsize(AF_RUBRO)
+    AL_RUBRO.seek(0)
+    ban=False
+    while AL_RUBRO.tell()<t and ban== False:
+        pos = AL_RUBRO.tell()
+        rRub = pickle.load(AL_RUBRO)
+        if int(rRub.cod_rub) == int(cod):
+            return pos
+    return -1
+
+##########################################################
+
+############### ALTA DE SILOS ###############
+
+def cant_silos():
+    t=os.path.getsize(AF_SILOS)
+    if t==0:
+        return 0
+    else:
+        AL_SILOS.seek(0)
+        pickle.load(AL_SILOS)
+        aux=AL_SILOS.tell()
+        cant_reg=t//aux
+        return cant_reg
+
+def alta_silos():
+    os.system('cls')
+    print(" OPCION A - Alta de SILOS ")
+    print(" -----------------------------\n ")
+    rta='S'
+    while rta=='S':
+        os.system('cls')
+        sil=input("ingrese el Nombre del Silo [hasta 15 carcateres] :  ")
+        while len(sil)<3 or len(sil)>=15:
+            sil=input("ERROR. Ingrese el nombre del SILO [hasta 15 carcateres] :  ")
+        sil=sil.upper()
+        rSilo=silo()
+        if buscaSilo(sil) == -1:
+            rSilo.cod_silo=cant_silos()+1
+            rSilo.nom_silo=sil
+            
+            print(f"Elija el producto que desea asociar al silo {sil} ")
+            mostrar_productos()
+            print()
+            cantp=cant_prod()
+            cod=input(f"Ingrese el codigo de producto a Asociar con Silo {sil} -> ")
+            while validaRangoEntero(cod,1,cantp):
+                cod=input(f"ERROR. Ingrese el codigo a Asociar -> ")
+            cod=int(cod)
+
+            rSilo.cod_prod=cod
+            AL_SILOS.seek(0,2)
+            formatSilo(rSilo)
+            pickle.dump(rSilo,AL_SILOS)
+            AL_SILOS.flush()
+            print(f"El Silo {sil} fue registrado con éxito... \n ")
+        else:
+            print("Ya existe un Silo con ese nombre.\n")
+        
+        rta= input("Desea ingresar otro Silo? S-si   N-no: ").upper()
+        while rta != "S" and rta != "N":
+            rta = input("Por favor, solo S para Si o N para No:").upper()
+
+def buscaSilo(silo):
+    t = os.path.getsize(AF_SILOS)
+    AL_SILOS.seek(0)
+    ban=False
+    while AL_SILOS.tell()<t and ban== False:
+        pos = AL_SILOS.tell()
+        rSilo = pickle.load(AL_SILOS)
+        if rSilo.nom_silo.strip() == silo:
+            return pos
+    return -1
+
+def buscaSilo_cod(cod):
+    t = os.path.getsize(AF_SILOS)
+    AL_SILOS.seek(0)
+    ban=False
+    while AL_SILOS.tell()<t and ban== False:
+        pos = AL_SILOS.tell()
+        rSilo = pickle.load(AL_SILOS)
+        if int(rSilo.cod_silo) == int(cod):
+            return pos
+    return -1
 
 ##########################################################
 
@@ -350,6 +481,28 @@ def menu_crud():
     print("                         ##################################")
     print("" )
 
+def menu_crud_rubro():
+    print( "")
+    print("                         ##################################")
+    print("                         |   MENU ALTA DE RUBROS          |")
+    print("                         ##################################")
+    print("                         # A - ALTA")
+    print("                         # V - Volver al Menu Anterior")
+    print("                         ----------------------------------")
+    print("                         ##################################")
+    print("" )
+
+def menu_crud_silos():
+    print( "")
+    print("                         ##################################")
+    print("                         |   MENU ALTA DE SILOS           |")
+    print("                         ##################################")
+    print("                         # A - ALTA")
+    print("                         # V - Volver al Menu Anterior")
+    print("                         ----------------------------------")
+    print("                         ##################################")
+    print("" )
+
 def menu_Archivos():
     print( "")
     print("                         ##################################")
@@ -370,6 +523,15 @@ def mostrarOp(x):
 
 def mostrarProd(x):
     print(x.cod_prod," - ",x.nom_prod," - ",x.est)
+
+def mostrarRub(x):
+    print(x.cod_rub," - ",x.nom_rub)
+
+def mostrarRxP(x):
+    print(x.cod_prod," - ",x.cod_rub," - ",x.min," - ",x.max)
+
+def mostrarSilo(x):
+    print(x.cod_silo," - ",x.nom_silo," - ",x.cod_prod," - ",x.stock)
 
 def archivos():
     flag=True
@@ -403,7 +565,6 @@ def archivos():
                 print("\nTamaño de registro = ",aux," - Cantidad de Registros = ", cant_reg)
                 os.system('pause')
                       
-
         elif opcion == "2":
             global AF_PROD, AL_PROD
             os.system('cls')
@@ -428,41 +589,76 @@ def archivos():
                 os.system('pause')
 
         elif opcion == "3":
-            
-            print( "                        #####################################################")
-            print("                        #####################################################")
-            print("                        ##                                                 ##")
-            print("                        ##             ARCHIVO RUBROS                      ##")
-            print("                        ##                                                 ##")
-            print("                        #####################################################")
-            print("                        #####################################################" )
-            os.system('pause')
+            global AF_RUBRO, AL_RUBRO
+            os.system('cls')
+            print(" OPCION 3 - MOSTRAR ARCHIVO RUBROS ")
+            print(" ------------------------------------\n ")
+            t=os.path.getsize(AF_RUBRO)
+            if t==0:
+                print("El archivo está vacío")
+                os.system('pause')
+            else:
+                print("-----------------------------------------")
+                print(" CodPro - Producto ")
+                AL_RUBRO.seek(0)
+                while AL_RUBRO.tell()<t:
+                    rRub=pickle.load(AL_RUBRO)
+                    mostrarRub(rRub)
+                AL_RUBRO.seek(0)
+                pickle.load(AL_RUBRO)
+                aux=AL_RUBRO.tell()
+                cant_reg=t//aux
+                print("\nTamaño de registro = ",aux," - Cantidad de Registros = ", cant_reg)
+                os.system('pause')
 
         elif opcion == "4":
-            
-            print( "                        #####################################################")
-            print("                        #####################################################")
-            print("                        ##                                                 ##")
-            print("                        ##           ARCHIVO RUBRO POR PRODUCTOS           ##")
-            print("                        ##                                                 ##")
-            print("                        #####################################################")
-            print("                        #####################################################")
-            os.system('pause')
+            global AF_RUBROP, AL_RUBROP
+            os.system('cls')
+            print(" OPCION 4 - MOSTRAR ARCHIVO RUBROS x PRODCUTOS ")
+            print(" ------------------------------------\n ")
+            t=os.path.getsize(AF_RUBROP)
+            if t==0:
+                print("El archivo está vacío")
+                os.system('pause')
+            else:
+                print("-----------------------------------------")
+                print(" CodPro - CodRub - Val Min - Val Max ")
+                AL_RUBROP.seek(0)
+                while AL_RUBROP.tell()<t:
+                    rRxP=pickle.load(AL_RUBROP)
+                    mostrarRxP(rRxP)
+                AL_RUBROP.seek(0)
+                pickle.load(AL_RUBROP)
+                aux=AL_RUBROP.tell()
+                cant_reg=t//aux
+                print("\nTamaño de registro = ",aux," - Cantidad de Registros = ", cant_reg)
+                os.system('pause')
 
         elif opcion == "5":
-            
-            print( "                        #####################################################")
-            print("                        #####################################################")
-            print("                        ##                                                 ##")
-            print("                        ##           ARCHIVO SILOS                         ##")
-            print("                        ##                                                 ##")
-            print("                        #####################################################")
-            print("                        #####################################################")
-            os.system('pause')
+            global AF_SILOS, AL_SILOS
+            os.system('cls')
+            print(" OPCION 5 - MOSTRAR ARCHIVO SILOS ")
+            print(" ------------------------------------\n ")
+            t=os.path.getsize(AF_SILOS)
+            if t==0:
+                print("El archivo está vacío")
+                os.system('pause')
+            else:
+                print("-----------------------------------------")
+                print(" Codigo - Nombre - Producto - Stock ")
+                AL_SILOS.seek(0)
+                while AL_SILOS.tell()<t:
+                    rSilo=pickle.load(AL_SILOS)
+                    mostrarSilo(rSilo)
+                AL_SILOS.seek(0)
+                pickle.load(AL_SILOS)
+                aux=AL_SILOS.tell()
+                cant_reg=t//aux
+                print("\nTamaño de registro = ",aux," - Cantidad de Registros = ", cant_reg)
+                os.system('pause')
 
         elif opcion == "0":
             flag=False
-
 
 def crud():
     flag=True
@@ -545,6 +741,34 @@ def crud_productos():
         elif opcion == "V" or opcion == "v":
             flag=False
 
+def crud_rubros():
+    flag=True
+    while flag==True:
+        
+        menu_crud_rubro()
+        opcion=input( "\n--> Ingrese la opción que desea usar, o V para volver al menú anterior: \n--> " )
+        
+        if opcion == "A" or opcion == "a":
+            
+            alta_rubros()
+                              
+        elif opcion == "V" or opcion == "v":
+            flag=False
+
+def crud_silos():
+    flag=True
+    while flag==True:
+        
+        menu_crud_silos()
+        opcion=input( "\n--> Ingrese la opción que desea usar, o V para volver al menú anterior: \n--> " )
+        
+        if opcion == "A" or opcion == "a":
+            
+            alta_silos()
+                              
+        elif opcion == "V" or opcion == "v":
+            flag=False
+
 def administraciones():
     flag=True
     while flag==True:
@@ -558,13 +782,14 @@ def administraciones():
             crud_productos()
 
         elif opcion == "C" or opcion == "c":
-            crud()
+            crud_rubros()
 
         elif opcion == "D" or opcion == "d":
             crud()
 
         elif opcion == "E" or opcion == "e":
-            crud()
+            crud_silos()
+
         elif opcion == "F" or opcion == "f":
             crud()
 
@@ -577,14 +802,14 @@ def administraciones():
 
 ################ PROGRAMA PRINCIPAL #######################
 
-AF_OP = "TP3F\\OPERACIONES.DAT"
-AF_PROD = "TP3F\\PRODUCTOS.DAT"
-AF_RUBRO = "TP3F\\RUBROS.DAT"
-AF_RUBROP = "TP3F\\RUBXPROD.DAT"
-AF_SILOS = "TP3F\\SILOS.DAT"
+AF_OP = "tpn3\\TP3F\\OPERACIONES.DAT"
+AF_PROD = "tpn3\\TP3F\\PRODUCTOS.DAT"
+AF_RUBRO = "tpn3\\TP3F\\RUBROS.DAT"
+AF_RUBROP = "tpn3\\TP3F\\RUBXPROD.DAT"
+AF_SILOS = "tpn3\\TP3F\\SILOS.DAT"
 
-if not os.path.exists('TP3F'):
-    os.makedirs('TP3F')
+if not os.path.exists('tpn3\\TP3F'):
+    os.makedirs('tpn3\\TP3F')
 
 #####estoy probando,me falta todavia#####
 
