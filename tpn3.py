@@ -95,6 +95,17 @@ def validaRangoEntero(nro, min,max):
     except:
         return True  
 
+def validaRangoReal(nro, min,max):
+    try:              
+        nro = float(nro)
+        min = float(min)      
+        if nro >= min and nro <= max:
+            return False 
+        else:
+            return True  
+    except:
+        return True 
+
 def validarFecha():
   actual=datetime.today()
   actuall=datetime.strftime(actual, '%d/%m/%Y')
@@ -404,7 +415,19 @@ def mostrar_rubros_all(): # MUESTRA TODOS LOS RUBROS
 
 ############### ALTA DE RUBROS x PRODUCTO ###############
 
-def altaRxP():
+def buscaRxP_cod(pro,rub):
+    t = os.path.getsize(AF_RUBROP)
+    AL_RUBROP.seek(0)
+    ban=False
+    while AL_RUBROP.tell()<t and ban== False:
+        rRxP = pickle.load(AL_RUBROP)
+        if int(rRxP.cod_prod) == int(pro) and int(rRxP.cod_rub) == int(rub):
+            ban=True
+            return True
+    return False
+
+def alta_RxP():
+    global AF_PROD,AF_RUBRO,AF_RUBROP,AL_PROD,AL_RUBRO,AL_RUBROP
     os.system('cls')
     print(" OPCION A - Alta de Rubros x Producto ")
     print(" -------------------------------------\n ")
@@ -418,36 +441,50 @@ def altaRxP():
         while rta=='S':
             mostrar_productos_all()
             cantp=cant_prod()
-            codp=input("Ingrese el código del producto con el que quiera trabajar o 0 para cancelar")
+            codp=input("Ingrese el código del producto con el que quiera trabajar o 0 para cancelar -> ")
             while validaRangoEntero(codp,0,cantp):
-                codp=input("ERROR. Ingrese el código del producto con el que quiera trabajar o 0 para cancelar")
+                codp=input("ERROR. Ingrese el código del producto con el que quiera trabajar o 0 para cancelar -> ")
             codp=int(codp)
             if codp!=0:
-                t=os.path.getsize(AF_RUBROP)
-                if t!=0:
-                    rRxP=rubrop()
-                    AL_RUBROP.seek
-
-                
-                pass
-
-
+                posp=buscaProducto_cod(codp)
+                AL_PROD.seek(posp)
+                rProd=pickle.load(AL_PROD)
+                mostrar_rubros_all()
+                cantr=cant_rub()
+                codr=input(f"Ingrese el código del Rubro con el que quieras asociar a {rProd.nom_prod.strip()} -> ")
+                while validaRangoEntero(codr,0,cantr):
+                    codr=input(f"Ingrese el código del Rubro con el que quieras asociar a {rProd.nom_prod.strip()} -> ")
+                codr=int(codr)
+                if codr!=0:
+                    posr=buscaRubro_cod(codr)
+                    AL_RUBRO.seek(posr)
+                    rRub=pickle.load(AL_RUBRO)
+                    if buscaRxP_cod(codp,codr):
+                        print(f"El rubro {rRub.nom_rub.strip()} ya se encuentra asociado al producto {rProd.nom_prod.strip()} ")
+                    else:
+                        rRxP=rubrop()
+                        rRxP.cod_prod=codp
+                        rRxP.cod_rub=codr
+                        
+                        rRxP.min=input(f"Ingrese el valor MINIMO para {rRub.nom_rub.strip()} [entre 0 y 100] -> ")
+                        while validaRangoReal(rRxP.min,0,100):
+                            rRxP.min=input(f"Ingrese el valor MINIMO para {rRub.nom_rub.strip()} [entre 0 y 100] -> ")
+                        
+                        rRxP.max=input(f"Ingrese un valor mayor a {rRxP.min}, para registrar el MAXIMO de {rRub.nom_rub.strip()} [entre {rRxP.min} y 100] -> ")
+                        while validaRangoReal(rRxP.max,rRxP.min,100):
+                            rRxP.max=input(f"Ingrese un valor mayor a {rRxP.min}, para registrar el MAXIMO de {rRub.nom_rub.strip()} [entre {rRxP.min} y 100] -> ")
+                        
+                        AL_RUBROP.seek(0,2)
+                        formatRxP(rRxP)
+                        pickle.dump(rRxP,AL_RUBROP)
+                        AL_RUBROP.flush()
+                        print(f"Asociado {rProd.nom_prod.strip()} y {rRub.nom_rub.strip()}, con un mínimo de {rRxP.min.strip()} y un máximo de {rRxP.max.strip()} ")
+                        
             
-            rta= input("Desea ingresar otro Silo? S-si   N-no: ").upper()
+            rta= input("Desea ingresar Rubro x Producto? S-si   N-no: ").upper()
             while rta != "S" and rta != "N":
-                rta = input("Por favor, solo S para Si o N para No:").upper()
+                rta= input("Desea ingresar Rubro x Producto? S-si   N-no: ").upper()
     
-
-
-
-
-
-
-
-
-
-
-
 
 
 ############### ALTA DE SILOS ###############
@@ -544,7 +581,7 @@ def entrega_cupos():
     
 
 
-################# RECEPCION ########################
+################# 3. RECEPCION ########################
 
 # PARA OBTENER FECHA DE HOY
 def fecha_hoy():
@@ -596,13 +633,13 @@ def recepcion():
                     print("El estado de su camion ha cambiado a arribado")
                 
                 elif RegOp.fecha.strip()==hoy and RegOp.est.strip()=="A":
-                    print("Su camion ya se encuentra en estado de arribado")
+                    print(f"Su camion {RegOp.pat.strip()} ya se encuentra en estado de arribado")
 
                 elif RegOp.fecha.strip()==hoy and RegOp.est.strip()!="P" and RegOp.est.strip()!="A":
-                    print("El camion ingresado no se encuentra en pendientes")
+                    print(f"El camion ingresado {pat} no se encuentra en pendientes")
 
                 elif RegOp.fecha.strip()>hoy and RegOp.est.strip()=="P":
-                    print("Su cupo está asignado para la fecha:",RegOp.fecha.strip())
+                    print(f"Su cupo está asignado para la fecha: {RegOp.fecha.strip()} ")
                 
                 elif RegOp.fecha.strip()<hoy and RegOp.est.strip()=="P":
                     print(f"Su cupo estaba asignado para la fecha: {RegOp.fecha.strip()}. Solicite un nuevo Cupo. ")
@@ -613,6 +650,15 @@ def recepcion():
             rta= input("Desea ingresar otra patente? S-si   N-no: ").upper()
             while rta != "S" and rta != "N":
                 rta = input("Por favor, solo S para Si o N para No:").upper()
+
+
+################# 4. REGISTRAR CALIDAD ########################
+
+
+################# 5. REGISTRAR PESO BRUTO ########################
+
+
+################# 7. REGISTRAR TARA ########################
 
 
 ##########################################################
@@ -671,6 +717,17 @@ def menu_crud_rubro():
     print( "")
     print("                         ##################################")
     print("                         |   MENU ALTA DE RUBROS          |")
+    print("                         ##################################")
+    print("                         # A - ALTA")
+    print("                         # V - Volver al Menu Anterior")
+    print("                         ----------------------------------")
+    print("                         ##################################")
+    print("" )
+
+def menu_crud_rxp():
+    print( "")
+    print("                         ##################################")
+    print("                         |   MENU ALTA DE RUBRO X PRODUCTO |")
     print("                         ##################################")
     print("                         # A - ALTA")
     print("                         # V - Volver al Menu Anterior")
@@ -941,6 +998,20 @@ def crud_rubros():
         elif opcion == "V" or opcion == "v":
             flag=False
 
+def crud_rxp():
+    flag=True
+    while flag==True:
+        
+        menu_crud_rxp()
+        opcion=input( "\n--> Ingrese la opción que desea usar, o V para volver al menú anterior: \n--> " )
+        
+        if opcion == "A" or opcion == "a":
+            
+            alta_RxP()
+                              
+        elif opcion == "V" or opcion == "v":
+            flag=False
+
 def crud_silos():
     flag=True
     while flag==True:
@@ -971,7 +1042,7 @@ def administraciones():
             crud_rubros()
 
         elif opcion == "D" or opcion == "d":
-            crud()
+            crud_rxp()
 
         elif opcion == "E" or opcion == "e":
             crud_silos()
