@@ -504,8 +504,7 @@ def alta_silos():
 def buscaSilo(silo):
     t = os.path.getsize(AF_SILOS)
     AL_SILOS.seek(0)
-    ban=False
-    while AL_SILOS.tell()<t and ban== False:
+    while AL_SILOS.tell()<t:
         pos = AL_SILOS.tell()
         rSilo = pickle.load(AL_SILOS)
         if rSilo.nom_silo.strip() == silo:
@@ -515,8 +514,7 @@ def buscaSilo(silo):
 def buscaSilo_cod(cod):
     t = os.path.getsize(AF_SILOS)
     AL_SILOS.seek(0)
-    ban=False
-    while AL_SILOS.tell()<t and ban== False:
+    while AL_SILOS.tell()<t:
         pos = AL_SILOS.tell()
         rSilo = pickle.load(AL_SILOS)
         if int(rSilo.cod_silo) == int(cod):
@@ -532,6 +530,7 @@ def entrega_cupos():
     rOp.pat=input("Ingrese patente -> ")
     while len(rOp.pat)<6 or len(rOp.pat)>7:
         rOp.pat=input("Ingrese patente -> ")
+    rOp.pat=rOp.pat.upper()    
     rOp.cod_prod=input("Ingrese el código del producto -> ")
     while rOp.cod_prod<"1" or rOp.cod_prod>"7":
         rOp.cod_prod=input("Ingrese el código del producto -> ")
@@ -553,28 +552,20 @@ def fecha_hoy():
     hoy=hoy.strftime('%d/%m/%Y')
     return hoy
 
-hoy=fecha_hoy() # VARIABLE PARA FECHA DE HOY
+hoy=fecha_hoy() # VARIABLE GLOBAL PARA FECHA DE HOY
 
 def Busco_patente(pat):
     global AF_OP, AL_OP
     t = os.path.getsize(AF_OP)
     AL_OP.seek(0)
-    RegOp=oper()
-    ban=False
-    while AL_OP.tell()<t and ban== False:
+    while AL_OP.tell()<t:
         pat_e = AL_OP.tell()
         RegOp = pickle.load(AL_OP)
-        if RegOp.pat.strip() == pat and RegOp.fecha == hoy and RegOp.est == "P":
+        
+        if RegOp.pat.upper() == pat.ljust(7):
             return pat_e
-        elif RegOp.pat.strip() == pat and RegOp.fecha == hoy and RegOp.est == "A":
-            return "2"
-        elif RegOp.pat.strip() == pat and RegOp.fecha == hoy and RegOp.est != "P":
-            return "1"
-        elif RegOp.pat.strip() == pat and RegOp.fecha != hoy :
-            if RegOp.fecha > hoy:
-                A = RegOp.fecha
-                return A 
-    return "3"
+    return -1
+
 
 def recepcion():
     global AF_OP, AL_OP
@@ -588,33 +579,37 @@ def recepcion():
         rta='S'
         while rta=='S':
             os.system('cls')
-            pat=input("Ingrese patente: ")
+            pat=input("Ingrese patente: [de 6  o 7 caracteres] - > ")
             while len(pat)<6 or len(pat)>7:
-                pat=input("Error. Ingrese una patente valida: ")
-            pat=pat.upper
+                pat=input("Error. Ingrese una patente valida: [de 6  o 7 caracteres] - >  ")
+            pat=pat.upper()
             RegOp= oper()
-            if Busco_patente(pat) == pat_e:
+            if Busco_patente(pat) != -1:
                 pat_e = Busco_patente(pat)
                 AL_OP.seek(pat_e,0)
                 RegOp = pickle.load(AL_OP)
-                RegOp.est = "A"
-                AL_OP.seek(pat_e,0)
-                pickle.dump(RegOp, AL_OP)
-                AL_OP.flush()
-                print("El estado de su camion ha cambiado a arribado")
-
-            elif Busco_patente(pat)== "2":
-                print("Su camion ya se encuentra en estado de arribado")
+                if RegOp.fecha.strip()==hoy and RegOp.est.strip()=="P":
+                    RegOp.est = "A"
+                    AL_OP.seek(pat_e,0)
+                    pickle.dump(RegOp, AL_OP)
+                    AL_OP.flush()
+                    print("El estado de su camion ha cambiado a arribado")
                 
-            elif Busco_patente(pat)== "3":
-                print("La patente ingresada no tiene cupo")
+                elif RegOp.fecha.strip()==hoy and RegOp.est.strip()=="A":
+                    print("Su camion ya se encuentra en estado de arribado")
 
-            elif Busco_patente(pat) == A:
-                print("Su cupo está asignado para la fecha:",A)
-            
-            elif Busco_patente(pat) == "1":
-                print("El camion ingresado no se encuentra en pendientes")
-            
+                elif RegOp.fecha.strip()==hoy and RegOp.est.strip()!="P" and RegOp.est.strip()!="A":
+                    print("El camion ingresado no se encuentra en pendientes")
+
+                elif RegOp.fecha.strip()>hoy and RegOp.est.strip()=="P":
+                    print("Su cupo está asignado para la fecha:",RegOp.fecha.strip())
+                
+                elif RegOp.fecha.strip()<hoy and RegOp.est.strip()=="P":
+                    print(f"Su cupo estaba asignado para la fecha: {RegOp.fecha.strip()}. Solicite un nuevo Cupo. ")
+
+            else:
+                print("La patente ingresada No tiene cupo")
+                
             rta= input("Desea ingresar otra patente? S-si   N-no: ").upper()
             while rta != "S" and rta != "N":
                 rta = input("Por favor, solo S para Si o N para No:").upper()
