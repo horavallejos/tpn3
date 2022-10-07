@@ -131,7 +131,7 @@ def validarFecha():
         print("Fecha invalida")
 
 
-def cant_prod():
+def cant_prod_viejo():
     t=os.path.getsize(AF_PROD)
     if t==0:
         return 0
@@ -141,6 +141,21 @@ def cant_prod():
         aux=AL_PROD.tell()
         cant_reg=t//aux
         return cant_reg
+
+### SE CAMBIO DE LA VERSION ANTERIOR A ESTA PORQUE LA OTRA SOLIA DAR ERRONEO. 
+### SUPONGO QUE POR LA DIVISION ENTERA
+
+def cant_prod():
+    t=os.path.getsize(AF_PROD)
+    cont=0
+    if t==0:
+        return 0
+    else:
+        AL_PROD.seek(0)
+        while AL_PROD.tell()<t:
+            cont+=1
+            pickle.load(AL_PROD)
+        return cont
 
 def alta_productos():
     os.system('cls')
@@ -339,14 +354,15 @@ def mostrar_productos(): # MUESTRA PRODUCTOS ACTIVOS
 
 def cant_rub():
     t=os.path.getsize(AF_RUBRO)
+    cont=0
     if t==0:
         return 0
     else:
         AL_RUBRO.seek(0)
-        pickle.load(AL_RUBRO)
-        aux=AL_RUBRO.tell()
-        cant_reg=t//aux
-        return cant_reg
+        while AL_RUBRO.tell()<t:
+            cont+=1
+            pickle.load(AL_RUBRO)
+        return cont
 
 def alta_rubros():
     os.system('cls')
