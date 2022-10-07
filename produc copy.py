@@ -1,11 +1,11 @@
 import os
 import os.path
 import pickle
-import datetime
+from datetime import datetime
 
 #### CREAMOS LOS CONSTRUCTORES ####
 
-class op:
+class oper:
     def __init__(self):
         self.pat = ""
         self.cod_prod = 0
@@ -15,7 +15,7 @@ class op:
         self.tara = 0
 
 class prod:
-    def _init__(self):
+    def __init__(self):
         self.cod_prod = 0
         self.nom_prod = ""
         self.est = ""
@@ -94,6 +94,31 @@ def validaRangoEntero(nro, min,max):
             return True  
     except:
         return True  
+
+def validarFecha():
+  actual=datetime.today()
+  actuall=datetime.strftime(actual, '%d/%m/%Y')
+  flag = True
+  print("La fecha a ingresar podra ser mayor o igual a la fecha de hoy")
+  
+  while flag:
+    try:
+      fech = input("Ingresa una fecha en el formato DD/MM/AAAA: ")
+      fecha=datetime.strptime(fech, '%d/%m/%Y')
+      fechaa=datetime.strftime(fecha, '%d/%m/%Y')
+      fla = False
+    except ValueError:
+      print("Fecha invalida")
+    if fla == False:
+      if actual < fecha:
+        flag = False
+        return fechaa
+      elif actuall == fechaa:
+        flag = False
+        return fechaa
+      else:
+        print("Fecha invalida")
+
 
 def cant_prod():
     t=os.path.getsize(AF_PROD)
@@ -361,7 +386,69 @@ def buscaRubro_cod(cod):
             return pos
     return -1
 
-##########################################################
+def mostrar_rubros_all(): # MUESTRA TODOS LOS RUBROS
+    global AF_RUBRO, AL_RUBRO
+    os.system('cls')
+    t=os.path.getsize(AF_RUBRO)
+    if t==0:
+        print("No hay Rubros para mostrar")
+        os.system('pause')
+    else:
+        rRub=rubro()
+        print("-----------------------------------------")
+        print(" CodRub - Rurbo  ")
+        AL_RUBRO.seek(0)
+        while AL_RUBRO.tell()<t:
+            rRub=pickle.load(AL_RUBRO)
+            mostrarRub(rRub)
+
+############### ALTA DE RUBROS x PRODUCTO ###############
+
+def altaRxP():
+    os.system('cls')
+    print(" OPCION A - Alta de Rubros x Producto ")
+    print(" -------------------------------------\n ")
+    r=os.path.getsize(AF_RUBRO)
+    p=os.path.getsize(AF_PROD)
+    if r==0 and p==0:
+        print("Productos y Rubros deben contener datos para trabajar en esta carga ")
+        os.system('pause')
+    else:
+        rta='S'
+        while rta=='S':
+            mostrar_productos_all()
+            cantp=cant_prod()
+            codp=input("Ingrese el código del producto con el que quiera trabajar o 0 para cancelar")
+            while validaRangoEntero(codp,0,cantp):
+                codp=input("ERROR. Ingrese el código del producto con el que quiera trabajar o 0 para cancelar")
+            codp=int(codp)
+            if codp!=0:
+                t=os.path.getsize(AF_RUBROP)
+                if t!=0:
+                    rRxP=rubrop()
+                    AL_RUBROP.seek
+
+                
+                pass
+
+
+            
+            rta= input("Desea ingresar otro Silo? S-si   N-no: ").upper()
+            while rta != "S" and rta != "N":
+                rta = input("Por favor, solo S para Si o N para No:").upper()
+    
+
+
+
+
+
+
+
+
+
+
+
+
 
 ############### ALTA DE SILOS ###############
 
@@ -435,6 +522,103 @@ def buscaSilo_cod(cod):
         if int(rSilo.cod_silo) == int(cod):
             return pos
     return -1
+
+
+############# ENTREGA DE CUPOS ####################
+
+def entrega_cupos():
+    global AF_OP, AL_OP
+    rOp=oper()
+    rOp.pat=input("Ingrese patente -> ")
+    while len(rOp.pat)<6 or len(rOp.pat)>7:
+        rOp.pat=input("Ingrese patente -> ")
+    rOp.cod_prod=input("Ingrese el código del producto -> ")
+    while rOp.cod_prod<"1" or rOp.cod_prod>"7":
+        rOp.cod_prod=input("Ingrese el código del producto -> ")
+    rOp.fecha=validarFecha()
+    rOp.est="P"
+    AL_OP.seek(0,2)
+    formatOp(rOp)
+    pickle.dump(rOp,AL_OP)
+    AL_OP.flush()
+    print(f"El CUPO para {rOp.pat} fue registrado con éxito... \n ")
+    
+
+
+################# RECEPCION ########################
+
+# PARA OBTENER FECHA DE HOY
+def fecha_hoy():
+    hoy=datetime.now()
+    hoy=hoy.strftime('%d/%m/%Y')
+    return hoy
+
+hoy=fecha_hoy() # VARIABLE PARA FECHA DE HOY
+
+def Busco_patente(pat):
+    global AF_OP, AL_OP
+    t = os.path.getsize(AF_OP)
+    AL_OP.seek(0)
+    RegOp=oper()
+    ban=False
+    while AL_OP.tell()<t and ban== False:
+        pat_e = AL_OP.tell()
+        RegOp = pickle.load(AL_OP)
+        if RegOp.pat.strip() == pat and RegOp.fecha == hoy and RegOp.est == "P":
+            return pat_e
+        elif RegOp.pat.strip() == pat and RegOp.fecha == hoy and RegOp.est == "A":
+            return "2"
+        elif RegOp.pat.strip() == pat and RegOp.fecha == hoy and RegOp.est != "P":
+            return "1"
+        elif RegOp.pat.strip() == pat and RegOp.fecha != hoy :
+            if RegOp.fecha > hoy:
+                A = RegOp.fecha
+                return A 
+    return "3"
+
+def recepcion():
+    global AF_OP, AL_OP
+    os.system('cls')
+    print(" OPCION 3 - Recepcion ")
+    print(" -----------------------------\n ")
+    t = os.path.getsize(AF_OP)
+    if t==0:
+        print("NO HAY NADA EN CUPOS")
+    else:
+        rta='S'
+        while rta=='S':
+            os.system('cls')
+            pat=input("Ingrese patente: ")
+            while len(pat)<6 or len(pat)>7:
+                pat=input("Error. Ingrese una patente valida: ")
+            pat=pat.upper
+            RegOp= oper()
+            if Busco_patente(pat) == pat_e:
+                pat_e = Busco_patente(pat)
+                AL_OP.seek(pat_e,0)
+                RegOp = pickle.load(AL_OP)
+                RegOp.est = "A"
+                AL_OP.seek(pat_e,0)
+                pickle.dump(RegOp, AL_OP)
+                AL_OP.flush()
+                print("El estado de su camion ha cambiado a arribado")
+
+            elif Busco_patente(pat)== "2":
+                print("Su camion ya se encuentra en estado de arribado")
+                
+            elif Busco_patente(pat)== "3":
+                print("La patente ingresada no tiene cupo")
+
+            elif Busco_patente(pat) == A:
+                print("Su cupo está asignado para la fecha:",A)
+            
+            elif Busco_patente(pat) == "1":
+                print("El camion ingresado no se encuentra en pendientes")
+            
+            rta= input("Desea ingresar otra patente? S-si   N-no: ").upper()
+            while rta != "S" and rta != "N":
+                rta = input("Por favor, solo S para Si o N para No:").upper()
+
 
 ##########################################################
 
