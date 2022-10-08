@@ -589,31 +589,31 @@ def buscaSilo_cod(cod):
 ############# ENTREGA DE CUPOS ####################
 
 ################### PROVISORIO ###################
-# def entrega_cupos():
-#     global AF_OP, AL_OP
-#     rOp=oper()
-#     rOp.pat=validarPatente()
-#     e=Busco_patente(rOp.pat)
-#     if e!=-1:
-#         print("Patente existente. CHAU no'vemo' ")
-#         os.system('pause')
-#         ### Acá seguiría la parte si quiero ofrecer agregar en otra fecha
+def entrega_cupos():
+    global AF_OP, AL_OP
+    rOp=oper()
+    rOp.pat=validarPatente()
+    e=Busco_patente(rOp.pat)
+    if e!=-1:
+        print("Patente existente. CHAU no'vemo' ")
+        os.system('pause')
+        ### Acá seguiría la parte si quiero ofrecer agregar en otra fecha
 
-#     else:
-#         canp=cant_prod()
-#         mostrar_productos_all()
-#         print()
-#         rOp.cod_prod=input("Ingrese el código del producto -> ")
-#         while rOp.cod_prod<"1" or rOp.cod_prod>str(canp):
-#             rOp.cod_prod=input("Ingrese el código del producto -> ")
-#         rOp.fecha=validarFecha()
-#         rOp.est="P"
-#         AL_OP.seek(0,2)
-#         formatOp(rOp)
-#         pickle.dump(rOp,AL_OP)
-#         AL_OP.flush()
-#         print(f"El CUPO para {rOp.pat} fue registrado con éxito... \n ")
-#         os.system('pause')
+    else:
+        canp=cant_prod()
+        mostrar_productos_all()
+        print()
+        rOp.cod_prod=input("Ingrese el código del producto -> ")
+        while rOp.cod_prod<"1" or rOp.cod_prod>str(canp):
+            rOp.cod_prod=input("Ingrese el código del producto -> ")
+        rOp.fecha=validarFecha()
+        rOp.est="P"
+        AL_OP.seek(0,2)
+        formatOp(rOp)
+        pickle.dump(rOp,AL_OP)
+        AL_OP.flush()
+        print(f"El CUPO para {rOp.pat} fue registrado con éxito... \n ")
+        os.system('pause')
 ############# TERMINA PROVISORIO #########################
 
 def validarPatente():
@@ -630,58 +630,58 @@ def validarPatente():
         f=False
         return pat
 
-def entrega_cupos():
-    global AF_OP, AL_OP
-    ke="S"
-    print("ENTREGA DE CUPOS")
-    while ke == "S":
-      os.system('cls')
-      rOp=oper()
-      rOp.pat=validarPatente() 
-      e = Busco_p(rOp.pat)
-      if e ==1:
-        print("Cupo ya otorgado")  
-      rOp.fecha=validarFecha()
-      cantProd=cant_prod() # A esta variable le asigno la cantidad de productos que hay
-      mostrar_productos_all()
-      rOp.cod_prod=input("Ingrese el código del producto → ")
-      while rOp.cod_prod<"1" or rOp.cod_prod>"7":  # y acá podés usar, en vez de "7" le pones cantProd como limite máximo de rango, por si se agregan productos
-        rOp.cod_prod=input("Ingrese el código del producto → ")
-      ee = Busco_pr(rOp.cod_prod)
-      if ee==0:
-        print("Producto no encontrado")
-      if e!=1 and ee!=0:
-        rOp.est="P"
-      AL_OP.seek(0,2)
-      formatOp(rOp)
-      pickle.dump(rOp,AL_OP)
-      AL_OP.flush()
-      print(f"El cupo para {rOp.pat} fue registrado con éxito... \n ")
-      ke=str.upper(input("Desea ingresar otro camion? S-si N-no →"))
+# def entrega_cupos():
+#     global AF_OP, AL_OP
+#     ke="S"
+#     print("ENTREGA DE CUPOS")
+#     while ke == "S":
+#       os.system('cls')
+#       rOp=oper()
+#       rOp.pat=validarPatente() 
+#       e = Busco_p(rOp.pat)
+#       if e ==1:
+#         print("Cupo ya otorgado")  
+#       rOp.fecha=validarFecha()
+#       cantProd=cant_prod() # A esta variable le asigno la cantidad de productos que hay
+#       mostrar_productos_all()
+#       rOp.cod_prod=input("Ingrese el código del producto → ")
+#       while rOp.cod_prod<"1" or rOp.cod_prod>"7":  # y acá podés usar, en vez de "7" le pones cantProd como limite máximo de rango, por si se agregan productos
+#         rOp.cod_prod=input("Ingrese el código del producto → ")
+#       ee = Busco_pr(rOp.cod_prod)
+#       if ee==0:
+#         print("Producto no encontrado")
+#       if e!=1 and ee!=0:
+#         rOp.est="P"
+#       AL_OP.seek(0,2)
+#       formatOp(rOp)
+#       pickle.dump(rOp,AL_OP)
+#       AL_OP.flush()
+#       print(f"El cupo para {rOp.pat} fue registrado con éxito... \n ")
+#       ke=str.upper(input("Desea ingresar otro camion? S-si N-no →"))
 
-def Busco_pr(cod):
-    t = os.path.getsize(AF_PROD)
-    AL_PROD.seek(0)
-    ban=False
-    while AL_PROD.tell()<t and ban== False:
-        pos = AL_PROD.tell()
-        rProd = pickle.load(AL_PROD)
-        if int(rProd.cod_prod) == int(cod):
-            if rProd.est == "B":
-              rProd.est = "A"
-    return 0
+# def Busco_pr(cod):
+#     t = os.path.getsize(AF_PROD)
+#     AL_PROD.seek(0)
+#     ban=False
+#     while AL_PROD.tell()<t and ban== False:
+#         pos = AL_PROD.tell()
+#         rProd = pickle.load(AL_PROD)
+#         if int(rProd.cod_prod) == int(cod):
+#             if rProd.est == "B":
+#               rProd.est = "A"
+#     return 0
 
-def Busco_p(pat):
-    global AF_OP, AL_OP
-    f = datetime.now()
-    f = f.strftime('%d/%m/%Y')
-    t = os.path.getsize(AF_OP)
-    AL_OP.seek(0)
-    while AL_OP.tell()<t:
-        RegOp = pickle.load(AL_OP)
-        if RegOp.pat.upper() == pat.ljust(7):
-          if RegOp.fecha == f:
-            return 1
+# def Busco_p(pat):
+#     global AF_OP, AL_OP
+#     f = datetime.now()
+#     f = f.strftime('%d/%m/%Y')
+#     t = os.path.getsize(AF_OP)
+#     AL_OP.seek(0)
+#     while AL_OP.tell()<t:
+#         RegOp = pickle.load(AL_OP)
+#         if RegOp.pat.upper() == pat.ljust(7):
+#           if RegOp.fecha == f:
+#             return 1
 
 
 ################# 3. RECEPCION ########################
@@ -701,7 +701,7 @@ def Busco_patente(pat):
     while AL_OP.tell()<t:
         pat_e = AL_OP.tell()
         RegOp = pickle.load(AL_OP)
-        if RegOp.pat.upper() == pat.ljust(7):
+        if RegOp.pat == pat.ljust(7):
             return pat_e
     return -1
 
@@ -818,7 +818,7 @@ def registrar_calidad():
     else:
         rta='S'
         while rta=='S':
-            buscar_cupos_hoy()
+            #buscar_cupos_hoy()
             #os.system('cls')
             pat=validarPatente()
             pat=pat.upper()
@@ -856,7 +856,7 @@ def bruto():
     rta='S'
     while rta=='S':
         pat=validarPatente()
-        pat=pat.upper
+        pat=pat.upper()
         RegOp= oper()
         if Busco_patente(pat) != -1:
             pat_e = Busco_patente(pat)
@@ -866,12 +866,14 @@ def bruto():
             if A == "C":
                 bru=input("Ingrese peso bruto: [Límite Legal Argentino= 45TN] tolerancia +5TN ")
                 while validaRangoEntero(bru,8,50):
+                    bru=int(bru)
                     if bru<8:
                         print("El peso mínimo de un camión es de 8 TN. ")
                     bru=input("Ingrese peso bruto: [Límite Legal Argentino= 45TN] tolerancia +5TN ")
                 RegOp.pesob = bru
                 RegOp.est = "B"
                 AL_OP.seek(pat_e,0)
+                formatOp(RegOp)
                 pickle.dump(RegOp, AL_OP)
                 AL_OP.flush()
                 print(f"El peso bruto ha sido registrado con exito para la patente {pat}")
