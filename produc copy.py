@@ -2,7 +2,10 @@ import os
 import os.path
 import pickle
 from datetime import datetime
+import re
 
+patente6=re.compile("[A-Z]{3}[0-9]{3}")
+patente7=re.compile("[A-Z]{2}[0-9]{3}[A-Z]{2}")
 
 #### CREAMOS LOS CONSTRUCTORES ####
 
@@ -512,8 +515,6 @@ def alta_RxP():
             while rta != "S" and rta != "N":
                 rta= input("Desea ingresar Rubro x Producto? S-si   N-no: ").upper()
     
-
-
 ############### ALTA DE SILOS ###############
 
 def cant_silos():
@@ -585,33 +586,108 @@ def buscaSilo_cod(cod):
             return pos
     return -1
 
-
 ############# ENTREGA DE CUPOS ####################
+
+################### PROVISORIO ###################
+# def entrega_cupos():
+#     global AF_OP, AL_OP
+#     rOp=oper()
+#     rOp.pat=validarPatente()
+#     e=Busco_patente(rOp.pat)
+#     if e!=-1:
+#         print("Patente existente. CHAU no'vemo' ")
+#         os.system('pause')
+#         ### Acá seguiría la parte si quiero ofrecer agregar en otra fecha
+
+#     else:
+#         canp=cant_prod()
+#         mostrar_productos_all()
+#         print()
+#         rOp.cod_prod=input("Ingrese el código del producto -> ")
+#         while rOp.cod_prod<"1" or rOp.cod_prod>str(canp):
+#             rOp.cod_prod=input("Ingrese el código del producto -> ")
+#         rOp.fecha=validarFecha()
+#         rOp.est="P"
+#         AL_OP.seek(0,2)
+#         formatOp(rOp)
+#         pickle.dump(rOp,AL_OP)
+#         AL_OP.flush()
+#         print(f"El CUPO para {rOp.pat} fue registrado con éxito... \n ")
+#         os.system('pause')
+############# TERMINA PROVISORIO #########################
+
+def validarPatente():
+  f=True
+  while f==True:
+    pat=str.upper(input("Ingrese patente en formato ABC123 o AB123CD:"))
+    x=len(pat)
+    if x==6:
+      if patente6.match(pat):
+        f=False
+        return pat
+    if x==7:
+      if patente7.match(pat):
+        f=False
+        return pat
 
 def entrega_cupos():
     global AF_OP, AL_OP
-    rOp=oper()
-    rOp.pat=input("Ingrese patente -> ")
-    while len(rOp.pat)<6 or len(rOp.pat)>7:
-        rOp.pat=input("Ingrese patente -> ")
-    rOp.pat=rOp.pat.upper()    
-    rOp.cod_prod=input("Ingrese el código del producto -> ")
-    while rOp.cod_prod<"1" or rOp.cod_prod>"7":
-        rOp.cod_prod=input("Ingrese el código del producto -> ")
-    rOp.fecha=validarFecha()
-    rOp.est="P"
-    AL_OP.seek(0,2)
-    formatOp(rOp)
-    pickle.dump(rOp,AL_OP)
-    AL_OP.flush()
-    print(f"El CUPO para {rOp.pat} fue registrado con éxito... \n ")
-    
+    ke="S"
+    print("ENTREGA DE CUPOS")
+    while ke == "S":
+      os.system('cls')
+      rOp=oper()
+      rOp.pat=validarPatente() 
+      e = Busco_p(rOp.pat)
+      if e ==1:
+        print("Cupo ya otorgado")  
+      rOp.fecha=validarFecha()
+      cantProd=cant_prod() # A esta variable le asigno la cantidad de productos que hay
+      mostrar_productos_all()
+      rOp.cod_prod=input("Ingrese el código del producto → ")
+      while rOp.cod_prod<"1" or rOp.cod_prod>"7":  # y acá podés usar, en vez de "7" le pones cantProd como limite máximo de rango, por si se agregan productos
+        rOp.cod_prod=input("Ingrese el código del producto → ")
+      ee = Busco_pr(rOp.cod_prod)
+      if ee==0:
+        print("Producto no encontrado")
+      if e!=1 and ee!=0:
+        rOp.est="P"
+      AL_OP.seek(0,2)
+      formatOp(rOp)
+      pickle.dump(rOp,AL_OP)
+      AL_OP.flush()
+      print(f"El cupo para {rOp.pat} fue registrado con éxito... \n ")
+      ke=str.upper(input("Desea ingresar otro camion? S-si N-no →"))
+
+def Busco_pr(cod):
+    t = os.path.getsize(AF_PROD)
+    AL_PROD.seek(0)
+    ban=False
+    while AL_PROD.tell()<t and ban== False:
+        pos = AL_PROD.tell()
+        rProd = pickle.load(AL_PROD)
+        if int(rProd.cod_prod) == int(cod):
+            if rProd.est == "B":
+              rProd.est = "A"
+    return 0
+
+def Busco_p(pat):
+    global AF_OP, AL_OP
+    f = datetime.now()
+    f = f.strftime('%d/%m/%Y')
+    t = os.path.getsize(AF_OP)
+    AL_OP.seek(0)
+    while AL_OP.tell()<t:
+        RegOp = pickle.load(AL_OP)
+        if RegOp.pat.upper() == pat.ljust(7):
+          if RegOp.fecha == f:
+            return 1
 
 
 ################# 3. RECEPCION ########################
 
-# PARA OBTENER FECHA DE HOY
-def fecha_hoy():
+
+def fecha_hoy(): # PARA OBTENER FECHA DE HOY
     hoy=datetime.now()
     hoy=hoy.strftime('%d/%m/%Y')
     return hoy
@@ -625,11 +701,9 @@ def Busco_patente(pat):
     while AL_OP.tell()<t:
         pat_e = AL_OP.tell()
         RegOp = pickle.load(AL_OP)
-        
         if RegOp.pat.upper() == pat.ljust(7):
             return pat_e
     return -1
-
 
 def recepcion():
     global AF_OP, AL_OP
@@ -643,9 +717,7 @@ def recepcion():
         rta='S'
         while rta=='S':
             os.system('cls')
-            pat=input("Ingrese patente: [de 6  o 7 caracteres] - > ")
-            while len(pat)<6 or len(pat)>7:
-                pat=input("Error. Ingrese una patente valida: [de 6  o 7 caracteres] - >  ")
+            pat=validarPatente()
             pat=pat.upper()
             RegOp= oper()
             if Busco_patente(pat) != -1:
@@ -678,7 +750,6 @@ def recepcion():
             while rta != "S" and rta != "N":
                 rta = input("Por favor, solo S para Si o N para No:").upper()
 
-
 ################# 4. REGISTRAR CALIDAD ########################
 
 def buscar_cupos_hoy():
@@ -704,6 +775,7 @@ def mostrar_RxP(prod):
     AL_RUBROP.seek(0)
     print("Control de Calidad por Producto\n")
     cont=0
+    print("\nIngrese Valores para cada ítem -> \n")
     while AL_RUBROP.tell()<t:
         posRxP = AL_RUBROP.tell()
         rRxP = pickle.load(AL_RUBROP)
@@ -721,19 +793,18 @@ def mostrar_RxP(prod):
             
             min=float(rRxP.min)
             max=float(rRxP.max)
-            print("Ingrese Valores para cada ítem -> \n\n")
+            
             print(f"Producto: {producto} - Rubro: {rubro} ")
-            valor=input(f"ingrese el valor de {rubro}. [Entre 0 y 100] ")
+            valor=input(f"ingrese el valor para {rubro}. [Entre 0 y 100] ")
             while validaRangoReal(valor,0,100):
                 valor=input(f"ERROR. ingrese el valor de {rubro}. [Entre 0 y 100] ")
             if ApruebaRangoReal(valor,min,max):
                 cont+=1
                 print("Dentro del Rango. Pasa")
-                os.system('pause')
+                
             else:
                 print("Fuera de Rango. No pasa")
-                os.system('pause')
-            
+    
     return cont
     
 def registrar_calidad():
@@ -748,10 +819,8 @@ def registrar_calidad():
         rta='S'
         while rta=='S':
             buscar_cupos_hoy()
-            os.system('cls')
-            pat=input("Ingrese patente: [de 6  o 7 caracteres] - > ")
-            while len(pat)<6 or len(pat)>7:
-                pat=input("Error. Ingrese una patente valida: [de 6  o 7 caracteres] - >  ")
+            #os.system('cls')
+            pat=validarPatente()
             pat=pat.upper()
             RegOp= oper()
             if Busco_patente(pat) != -1:
@@ -765,145 +834,68 @@ def registrar_calidad():
                         AL_OP.seek(pat_e,0)
                         pickle.dump(RegOp,AL_OP)
                         AL_OP.flush()
-                        print("Camión APROBADO con Calidad")
+                        print("\nCamión APROBADO con Calidad\n")
                     else:
                         RegOp.est="R"
                         AL_OP.seek(pat_e,0)
                         pickle.dump(RegOp,AL_OP)
                         AL_OP.flush()
-                        print("Camión RECHAZADO por baja Calidad")
+                        print("\nCamión RECHAZADO por baja Calidad\n")
                 
             rta= input("Desea ingresar otra patente? S-si   N-no: ").upper()
             while rta != "S" and rta != "N":
                 rta = input("Por favor, solo S para Si o N para No:").upper()
-
-                
-
+             
 ################# 5. REGISTRAR PESO BRUTO ########################
 
+def bruto():
+    global AF_OP, AL_OP
+    os.system('cls')
+    print(" OPCION 5 - Registrar peso bruto ")
+    print(" -----------------------------\n ")
+    rta='S'
+    while rta=='S':
+        pat=validarPatente()
+        pat=pat.upper
+        RegOp= oper()
+        if Busco_patente(pat) != -1:
+            pat_e = Busco_patente(pat)
+            AL_OP.seek(pat_e,0)
+            RegOp = pickle.load(AL_OP)
+            A= RegOp.est
+            if A == "C":
+                bru=input("Ingrese peso bruto: [Límite Legal Argentino= 45TN] tolerancia +5TN ")
+                while validaRangoEntero(bru,8,50):
+                    if bru<8:
+                        print("El peso mínimo de un camión es de 8 TN. ")
+                    bru=input("Ingrese peso bruto: [Límite Legal Argentino= 45TN] tolerancia +5TN ")
+                RegOp.pesob = bru
+                RegOp.est = "B"
+                AL_OP.seek(pat_e,0)
+                pickle.dump(RegOp, AL_OP)
+                AL_OP.flush()
+                print(f"El peso bruto ha sido registrado con exito para la patente {pat}")
 
-################# 7. REGISTRAR TARA ########################
+            elif Busco_patente(pat) != -1 and A == "R":
+                print(f"El camion patente: {pat} se encuentra en estado de Rechazado.")
+            
+            elif Busco_patente(pat)!= -1 and A =="A":
+                print("El camion se encuentra como: Arribado. Debe dirigirse a Registrar Calidad")
 
+            elif Busco_patente(pat) != -1 and A == "P":
+                print("Su camion se encuentra en pendientes. Debe Recibirlo y Registrar Calidad")
+        else:
+            print("La patente ingresada no ha sido encontrada\n")
+        rta= input("Desea ingresar otra patente? S-si   N-no: ").upper()
+        while rta != "S" and rta != "N":
+            rta = input("Por favor, solo S para Si o N para No:").upper()
 
-##########################################################
-
-def menu_princ():
-    print( "")
-    print("                         ##################################")
-    print("                         |   MENU PRINCIPAL EL ACOPIO     |")
-    print("                         ##################################")
-    print("                         # 1 - ADMININISTRACIONES")
-    print("                         # 2 - ENTREGA DE CUPOS")
-    print("                         # 3 - RECEPCION")
-    print("                         # 4 - REGISTRAR CALIDAD")
-    print("                         # 5 - REGISTRAR PESO BRUTO")
-    print("                         # 6 - ARCHIVOS")
-    print("                         # 7 - REGISTRAR TARA")
-    print("                         # 8 - REPORTES")
-    print("                         # 9 - SILOS")
-    print("                         # 0 - FIN DEL PROGRAMA")
-    print("                         ----------------------------------")
-    print("                         ##################################")
-    print("" )
-
-def menu_01_administraciones():
-    print( "")
-    print("                         ##################################")
-    print("                         |     MENU ADMINISTRACIONES      |")
-    print("                         ##################################")
-    print("                         # A - TITULARES")
-    print("                         # B - PRODUCTOS")
-    print("                         # C - RUBROS")
-    print("                         # D - RUBROS x PRODUCTO")
-    print("                         # E - SILOS")
-    print("                         # F - SUCURSALES")
-    print("                         # G - PRODUCTO POR TITULAR")
-    print("                         # V - Volver al Menu Principal")
-    print("                         ----------------------------------")
-    print("                         ##################################")
-    print("" )
-
-def menu_crud():
-    print( "")
-    print("                         ##################################")
-    print("                         |   MENU ALTA-BAJA-CONS-MODIF    |")
-    print("                         ##################################")
-    print("                         # A - ALTA")
-    print("                         # B - BAJA")
-    print("                         # C - CONSULTA")
-    print("                         # M - MODIFICACION")
-    print("                         # V - Volver al Menu Anterior")
-    print("                         ----------------------------------")
-    print("                         ##################################")
-    print("" )
-
-def menu_crud_rubro():
-    print( "")
-    print("                         ##################################")
-    print("                         |   MENU ALTA DE RUBROS          |")
-    print("                         ##################################")
-    print("                         # A - ALTA")
-    print("                         # V - Volver al Menu Anterior")
-    print("                         ----------------------------------")
-    print("                         ##################################")
-    print("" )
-
-def menu_crud_rxp():
-    print( "")
-    print("                         ##################################")
-    print("                         |   MENU ALTA DE RUBRO X PRODUCTO |")
-    print("                         ##################################")
-    print("                         # A - ALTA")
-    print("                         # V - Volver al Menu Anterior")
-    print("                         ----------------------------------")
-    print("                         ##################################")
-    print("" )
-
-def menu_crud_silos():
-    print( "")
-    print("                         ##################################")
-    print("                         |   MENU ALTA DE SILOS           |")
-    print("                         ##################################")
-    print("                         # A - ALTA")
-    print("                         # V - Volver al Menu Anterior")
-    print("                         ----------------------------------")
-    print("                         ##################################")
-    print("" )
-
-def menu_Archivos():
-    print( "")
-    print("                         ##################################")
-    print("                         | 6- MENU TEMP PARA VER ARCHIVOS |")
-    print("                         ##################################")
-    print("                         # 1 - Operaciones")
-    print("                         # 2 - Productos")
-    print("                         # 3 - Rubros")
-    print("                         # 4 - Rubros x Productos")
-    print("                         # 5 - Silos")
-    print("                         # 0 - Volver al Menu Anterior")
-    print("                         ----------------------------------")
-    print("                         ##################################")
-    print("" )
-
-def mostrarOp(x):
-    print(x.pat," - ",x.cod_prod," - ",x.fecha," - ",x.est," - ",x.pesob," - ",x.tara)
-
-def mostrarProd(x):
-    print(x.cod_prod," - ",x.nom_prod," - ",x.est)
-
-def mostrarRub(x):
-    print(x.cod_rub," - ",x.nom_rub)
-
-def mostrarRxP(x):
-    print(x.cod_prod," - ",x.cod_rub," - ",x.min," - ",x.max)
-
-def mostrarSilo(x):
-    print(x.cod_silo," - ",x.nom_silo," - ",x.cod_prod," - ",x.stock)
+################# 6. MOSTRAR ARCHIVOS ########################
 
 def archivos():
     flag=True
     while flag==True:
-        
+        os.system('cls')
         menu_Archivos()
         opcion=input( "\n--> Ingrese la opción que desea usar, o 0 para volver al menú anterior: \n--> " )
         while opcion<"0" and opcion>"5":
@@ -1026,6 +1018,168 @@ def archivos():
 
         elif opcion == "0":
             flag=False
+
+def mostrarOp(x):
+    print(x.pat," - ",x.cod_prod," - ",x.fecha," - ",x.est," - ",x.pesob," - ",x.tara)
+
+def mostrarProd(x):
+    print(x.cod_prod," - ",x.nom_prod," - ",x.est)
+
+def mostrarRub(x):
+    print(x.cod_rub," - ",x.nom_rub)
+
+def mostrarRxP(x):
+    print(x.cod_prod," - ",x.cod_rub," - ",x.min," - ",x.max)
+
+def mostrarSilo(x):
+    print(x.cod_silo," - ",x.nom_silo," - ",x.cod_prod," - ",x.stock)
+
+
+################# 7. REGISTRAR TARA ########################
+
+def tara():
+    global AF_OP, AL_OP
+    os.system('cls')
+    print(" OPCION 7 - Registrar tara ")
+    print(" -----------------------------\n ")
+    rta='S'
+    while rta=='S':
+        os.system('cls')
+        pat=input("Ingrese patente: ")
+        while len(pat)<6 or len(pat)>7:
+            pat=input("Error. Ingrese una patente valida: ")
+        pat=pat.upper
+        RegOp= oper()
+        if Busco_patente(pat) != -1:
+            pat_e = Busco_patente(pat)
+            AL_OP.seek(pat_e,0)
+            RegOp = pickle.load(AL_OP)
+            A= RegOp.est
+            B= RegOp.pesob
+            if A == "B":
+                tara=input("Ingrese tara: ")
+                while B < tara:
+                    tara=input("Error. Su tara no puede ser superior a su peso bruto: ")
+                RegOp.tara = tara
+                RegOp.est = "F"
+                AL_OP.seek(pat_e,0)
+                pickle.dump(RegOp, AL_OP)
+                AL_OP.flush()
+                print("Su tara ha sido registrada con exito. Felicitaciones!!! Ha finalizado su proceso")
+
+            elif Busco_patente(pat)!= -1 and A == "R":
+                print("Su camion se encuentra en estado de rechazado")
+            elif Busco_patente(pat)!= -1 and A =="A":
+                print("Su camion se encuentra en arribado, debe dirigirse a registrar su calidad")
+            elif Busco_patente(pat)!= -1 and A =="C":
+                print("Su camion aun no ha registrado su peso bruto")
+            elif Busco_patente(pat) != -1 and A == "P":
+                print("Su camion se encuentra en pendientes")
+        else:
+            print("La patente ingresada no ha sido encontrada")
+        rta= input("Desea ingresar otra patente? S-si   N-no: ").upper()
+        while rta != "S" and rta != "N":
+            rta = input("Por favor, solo S para Si o N para No:").upper()
+
+################## PANTALLAS #####################
+
+def menu_princ():
+    print( "")
+    print("                         ##################################")
+    print("                         |   MENU PRINCIPAL EL ACOPIO     |")
+    print("                         ##################################")
+    print("                         # 1 - ADMININISTRACIONES")
+    print("                         # 2 - ENTREGA DE CUPOS")
+    print("                         # 3 - RECEPCION")
+    print("                         # 4 - REGISTRAR CALIDAD")
+    print("                         # 5 - REGISTRAR PESO BRUTO")
+    print("                         # 6 - ARCHIVOS")
+    print("                         # 7 - REGISTRAR TARA")
+    print("                         # 8 - REPORTES")
+    print("                         # 9 - SILOS")
+    print("                         # 0 - FIN DEL PROGRAMA")
+    print("                         ----------------------------------")
+    print("                         ##################################")
+    print("" )
+
+def menu_01_administraciones():
+    print( "")
+    print("                         ##################################")
+    print("                         |     MENU ADMINISTRACIONES      |")
+    print("                         ##################################")
+    print("                         # A - TITULARES")
+    print("                         # B - PRODUCTOS")
+    print("                         # C - RUBROS")
+    print("                         # D - RUBROS x PRODUCTO")
+    print("                         # E - SILOS")
+    print("                         # F - SUCURSALES")
+    print("                         # G - PRODUCTO POR TITULAR")
+    print("                         # V - Volver al Menu Principal")
+    print("                         ----------------------------------")
+    print("                         ##################################")
+    print("" )
+
+def menu_crud():
+    print( "")
+    print("                         ##################################")
+    print("                         |   MENU ALTA-BAJA-CONS-MODIF    |")
+    print("                         ##################################")
+    print("                         # A - ALTA")
+    print("                         # B - BAJA")
+    print("                         # C - CONSULTA")
+    print("                         # M - MODIFICACION")
+    print("                         # V - Volver al Menu Anterior")
+    print("                         ----------------------------------")
+    print("                         ##################################")
+    print("" )
+
+def menu_crud_rubro():
+    print( "")
+    print("                         ##################################")
+    print("                         |   MENU ALTA DE RUBROS          |")
+    print("                         ##################################")
+    print("                         # A - ALTA")
+    print("                         # V - Volver al Menu Anterior")
+    print("                         ----------------------------------")
+    print("                         ##################################")
+    print("" )
+
+def menu_crud_rxp():
+    print( "")
+    print("                         ##################################")
+    print("                         |   MENU ALTA DE RUBRO X PRODUCTO |")
+    print("                         ##################################")
+    print("                         # A - ALTA")
+    print("                         # V - Volver al Menu Anterior")
+    print("                         ----------------------------------")
+    print("                         ##################################")
+    print("" )
+
+def menu_crud_silos():
+    print( "")
+    print("                         ##################################")
+    print("                         |   MENU ALTA DE SILOS           |")
+    print("                         ##################################")
+    print("                         # A - ALTA")
+    print("                         # V - Volver al Menu Anterior")
+    print("                         ----------------------------------")
+    print("                         ##################################")
+    print("" )
+
+def menu_Archivos():
+    print( "")
+    print("                         ##################################")
+    print("                         | 6- MENU TEMP PARA VER ARCHIVOS |")
+    print("                         ##################################")
+    print("                         # 1 - Operaciones")
+    print("                         # 2 - Productos")
+    print("                         # 3 - Rubros")
+    print("                         # 4 - Rubros x Productos")
+    print("                         # 5 - Silos")
+    print("                         # 0 - Volver al Menu Anterior")
+    print("                         ----------------------------------")
+    print("                         ##################################")
+    print("" )
 
 def crud():
     flag=True
@@ -1237,11 +1391,11 @@ while flag==True:
     elif op == "4":
         registrar_calidad()
     elif op == "5":
-        peso_bruto()
+        bruto()
     elif op == "6":
         archivos()
     elif op == "7":
-        peso_tara()
+        tara()
     elif op == "8":
         reportes()
     elif op == "9":
@@ -1249,5 +1403,11 @@ while flag==True:
         
     elif op =="0":
         flag=False
+        AL_OP.close()
+        AL_PROD.close()
+        AL_RUBRO.close()
+        AL_RUBROP.close()
+        AL_SILOS.close()
+        print('Archivos cerrados correctamente')
 
-print("see you later, aligator...")
+print("see you later, aligator...\n")

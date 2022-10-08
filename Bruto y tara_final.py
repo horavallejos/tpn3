@@ -11,7 +11,7 @@ def bruto():
             pat=input("Error. Ingrese una patente valida: ")
         pat=pat.upper
         RegOp= oper()
-        if Busco_patente(pat) == pat_e:
+        if Busco_patente(pat) != -1:
             pat_e = Busco_patente(pat)
             AL_OP.seek(pat_e,0)
             RegOp = pickle.load(AL_OP)
@@ -25,12 +25,12 @@ def bruto():
                 AL_OP.flush()
                 print("Su peso bruto ha sido registrado con exito")
 
-            elif Busco_patente(pat)== pat_e and A == "R":
+            elif Busco_patente(pat) != -1 and A == "R":
                 print("Su camion se encuentra en estado de rechazado")
-            elif Busco_patente(pat)== pat_e and A =="A":
+            elif Busco_patente(pat)!= -1 and A =="A":
                 print("Su camion se encuentra en arribado, debe dirigirse a registrar su calidad")
 
-            elif Busco_patente(pat) == pat_e and A == "P":
+            elif Busco_patente(pat) != -1 and A == "P":
                 print("Su camion se encuentra en pendientes")
         else:
             print("La patente ingresada no ha sido encontrada")
@@ -51,7 +51,7 @@ def tara():
             pat=input("Error. Ingrese una patente valida: ")
         pat=pat.upper
         RegOp= oper()
-        if Busco_patente(pat) == pat_e:
+        if Busco_patente(pat) != -1:
             pat_e = Busco_patente(pat)
             AL_OP.seek(pat_e,0)
             RegOp = pickle.load(AL_OP)
@@ -68,13 +68,13 @@ def tara():
                 AL_OP.flush()
                 print("Su tara ha sido registrada con exito. Felicitaciones!!! Ha finalizado su proceso")
 
-            elif Busco_patente(pat)== pat_e and A == "R":
+            elif Busco_patente(pat)!= -1 and A == "R":
                 print("Su camion se encuentra en estado de rechazado")
-            elif Busco_patente(pat)== pat_e and A =="A":
+            elif Busco_patente(pat)!= -1 and A =="A":
                 print("Su camion se encuentra en arribado, debe dirigirse a registrar su calidad")
-            elif Busco_patente(pat)== pat_e and A =="C":
+            elif Busco_patente(pat)!= -1 and A =="C":
                 print("Su camion aun no ha registrado su peso bruto")
-            elif Busco_patente(pat) == pat_e and A == "P":
+            elif Busco_patente(pat) != -1 and A == "P":
                 print("Su camion se encuentra en pendientes")
         else:
             print("La patente ingresada no ha sido encontrada")
