@@ -3,6 +3,7 @@ import os.path
 import pickle
 from datetime import datetime
 
+
 #### CREAMOS LOS CONSTRUCTORES ####
 
 class oper:
@@ -106,6 +107,16 @@ def validaRangoReal(nro, min,max):
     except:
         return True 
 
+def ApruebaRangoReal(nro, min,max):
+        nro = float(nro)
+        min = float(min)
+        max = float(max)      
+        if nro >= min and nro <= max:
+            return True 
+        else:
+            return False  
+    
+
 def validarFecha():
   actual=datetime.today()
   actuall=datetime.strftime(actual, '%d/%m/%Y')
@@ -172,7 +183,7 @@ def alta_productos():
         if buscaProducto(pro) == -1:
             RegProd.cod_prod=cant_prod()+1
             RegProd.nom_prod=pro
-            RegProd.est="A"
+            RegProd.est="B"
             AL_PROD.seek(0,2)
             formatProd(RegProd)
             pickle.dump(RegProd,AL_PROD)
@@ -670,6 +681,103 @@ def recepcion():
 
 ################# 4. REGISTRAR CALIDAD ########################
 
+def buscar_cupos_hoy():
+    global AF_OP, AL_OP,AF_PROD,AL_PROD
+    t = os.path.getsize(AF_OP)
+    AL_OP.seek(0)
+    print(" CAMIONES HABILITADOS PARA HOY ")
+    while AL_OP.tell()<t:
+        pos = AL_OP.tell()
+        RegOp = pickle.load(AL_OP)
+        if RegOp.fecha.strip() == hoy:
+            cod=int(RegOp.cod_prod)
+            posp=buscaProducto_cod(cod)
+            AL_PROD.seek(posp)
+            rProd=pickle.load(AL_PROD)
+            print(f"Patente: {RegOp.pat.strip()} - Producto: {rProd.nom_prod.strip()} ")
+            return pos
+    return -1
+
+def mostrar_RxP(prod):
+    global AF_OP, AL_OP,AF_RUBROP,AL_RUBROP, AF_RUBRO,AL_RUBRO,AF_PROD,AL_PROD
+    t = os.path.getsize(AF_RUBROP)
+    AL_RUBROP.seek(0)
+    print("Control de Calidad por Producto\n")
+    cont=0
+    while AL_RUBROP.tell()<t:
+        posRxP = AL_RUBROP.tell()
+        rRxP = pickle.load(AL_RUBROP)
+        if int(rRxP.cod_prod) == int(prod):
+            posp=buscaProducto_cod(prod)
+            AL_PROD.seek(posp)
+            rProd=pickle.load(AL_PROD)
+            producto=rProd.nom_prod.strip()
+            
+            rub=int(rRxP.cod_rub)
+            posrub=buscaRubro_cod(rub)
+            AL_RUBRO.seek(posrub)
+            rRub=pickle.load(AL_RUBRO)
+            rubro=rRub.nom_rub.strip()
+            
+            min=float(rRxP.min)
+            max=float(rRxP.max)
+            print("Ingrese Valores para cada ítem -> \n\n")
+            print(f"Producto: {producto} - Rubro: {rubro} ")
+            valor=input(f"ingrese el valor de {rubro}. [Entre 0 y 100] ")
+            while validaRangoReal(valor,0,100):
+                valor=input(f"ERROR. ingrese el valor de {rubro}. [Entre 0 y 100] ")
+            if ApruebaRangoReal(valor,min,max):
+                cont+=1
+                print("Dentro del Rango. Pasa")
+                os.system('pause')
+            else:
+                print("Fuera de Rango. No pasa")
+                os.system('pause')
+            
+    return cont
+    
+def registrar_calidad():
+    global AF_OP, AL_OP,AF_PROD,AL_PROD,AF_RUBRO,AL_RUBRO,AF_RUBROP,AL_RUBROP
+    os.system('cls')
+    print(" OPCION 3 - REGISTRAR CALIDAD ")
+    print(" -----------------------------\n ")
+    t = os.path.getsize(AF_OP)
+    if buscar_cupos_hoy()==-1:
+        print("NO HAY CAMIONES PARA HOY")
+    else:
+        rta='S'
+        while rta=='S':
+            buscar_cupos_hoy()
+            os.system('cls')
+            pat=input("Ingrese patente: [de 6  o 7 caracteres] - > ")
+            while len(pat)<6 or len(pat)>7:
+                pat=input("Error. Ingrese una patente valida: [de 6  o 7 caracteres] - >  ")
+            pat=pat.upper()
+            RegOp= oper()
+            if Busco_patente(pat) != -1:
+                pat_e = Busco_patente(pat)
+                AL_OP.seek(pat_e,0)
+                RegOp = pickle.load(AL_OP)
+                if RegOp.fecha.strip()==hoy and RegOp.est.strip()=="A":
+                    producto=int(RegOp.cod_prod)
+                    if mostrar_RxP(producto)>=2:
+                        RegOp.est="C"
+                        AL_OP.seek(pat_e,0)
+                        pickle.dump(RegOp,AL_OP)
+                        AL_OP.flush()
+                        print("Camión APROBADO con Calidad")
+                    else:
+                        RegOp.est="R"
+                        AL_OP.seek(pat_e,0)
+                        pickle.dump(RegOp,AL_OP)
+                        AL_OP.flush()
+                        print("Camión RECHAZADO por baja Calidad")
+                
+            rta= input("Desea ingresar otra patente? S-si   N-no: ").upper()
+            while rta != "S" and rta != "N":
+                rta = input("Por favor, solo S para Si o N para No:").upper()
+
+                
 
 ################# 5. REGISTRAR PESO BRUTO ########################
 
@@ -1127,7 +1235,7 @@ while flag==True:
     elif op == "3":
         recepcion()
     elif op == "4":
-        print("FUNCIONALIDAD EN CONSTRUCCION")
+        registrar_calidad()
     elif op == "5":
         peso_bruto()
     elif op == "6":
