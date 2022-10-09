@@ -1067,7 +1067,7 @@ def mostrarSilo(x):
 ################# 7. REGISTRAR TARA ########################
 
 def tara():
-    global AF_OP, AL_OP
+    global AF_OP, AL_OP,AF_SILOS,AL_SILOS
     os.system('cls')
     print(" OPCION 7 - Registrar tara ")
     print(" -----------------------------\n ")
@@ -1100,6 +1100,8 @@ def tara():
                 formatOp(RegOp)
                 pickle.dump(RegOp, AL_OP)
                 AL_OP.flush()
+                ####### CARGO SILO #######
+
                 print("\nSu tara ha sido registrada con exito. Felicitaciones!!! Ha finalizado su proceso\n")
 
             elif Busco_patente(pat)!= -1 and A == "R":
@@ -1118,6 +1120,68 @@ def tara():
 
 ################# 8. REPORTES ########################
 
+####### CUPOS OTORGADOS HISTORICAMENTE Y HOY ######
+
+def Cupos_Otorgados():
+    t=os.path.getsize(AF_OP)
+    AL_OP.seek(0)
+    RegOp = oper()
+    c=0
+    if t == 0:
+        print("No hay cupos otorgados")
+    else:
+        while AL_OP.tell() < t:
+            RegOp= pickle.load(AL_OP)
+            if RegOp.est=="A" or RegOp.est=="P" or RegOp.est=="C" or RegOp.est=="B" or RegOp.est=="R" or RegOp.est=="F":
+                c+=1
+    print(f"La cantidad de cupos otorgados fue de: {c} \n")
+
+def Cupos_Otorgados_hoy():
+    t=os.path.getsize(AF_OP)
+    AL_OP.seek(0)
+    RegOp = oper()
+    ch=0
+    if t == 0:
+        print("No hay cupos otorgados")
+    else:
+        while AL_OP.tell() < t:
+            RegOp= pickle.load(AL_OP)
+            if RegOp.fecha == hoy:
+                ch+=1
+    print(f"La cantidad de cupos otorgados para hoy {hoy} es: {ch} \n")
+
+##### CAMIONES ARRIBADOS HISTORICAMENTE Y HOY #####
+R = 0
+RH = 0
+def Arribados_hoy():
+    t=os.path.getsize(AF_OP)
+    AL_OP.seek(0)
+    RegOp = oper()
+    rh=0
+    if t == 0:
+        print("No han arribado camiones aun")
+    else:
+        while AL_OP.tell() < t:
+            RegOp= pickle.load(AL_OP)
+            if RegOp.est=="A" or RegOp.est=="C" or RegOp.est=="B" or RegOp.est=="R" or RegOp.est=="F":
+                if RegOp.fecha == hoy:
+                    rh+=1
+    print(f"La cantidad de camiones arribados hoy {hoy} fue: {rh} ")
+
+def Arribados():
+    t=os.path.getsize(AF_OP)
+    AL_OP.seek(0)
+    RegOp = oper()
+    r=0
+    if t == 0:
+        print("No han arribado camiones aun")
+    else:
+        while AL_OP.tell() < t:
+            RegOp= pickle.load(AL_OP)
+            if RegOp.est=="A" or RegOp.est=="C" or RegOp.est=="B" or RegOp.est=="R" or RegOp.est=="F":
+                r+=1
+    print(f"La cantidad total de camiones arribados fue: {r} ")
+
 def reportes():
     flag=True
     while flag==True:
@@ -1126,9 +1190,19 @@ def reportes():
         opcion=input( "\n--> Ingrese la opción que desea usar, o 0 para volver al menú anterior: \n--> " )
                 
         if opcion == "1":
+            os.system('cls')
+            print("--- CUPOS HISTORICOS OTORGADOS --- ")
+            Cupos_Otorgados()
+            print("\n--- CUPOS OTORGADOS EN EL DIA DE HOY --- ")
+            Cupos_Otorgados_hoy()
             os.system('pause')
                       
         elif opcion == "2":
+            os.system('cls')
+            print("--- CANTIDAD TOTAL DE CAMIONES --- ")
+            Arribados()
+            print("\n--- CANTIDAD TOTAL DE CAMIONES EN EL DIA DE HOY --- ")
+            Arribados_hoy()
             os.system('pause')
 
         elif opcion == "3":
@@ -1444,8 +1518,6 @@ AF_SILOS = "tpn3\\TP3F\\SILOS.DAT"
 
 if not os.path.exists('tpn3\\TP3F'):
     os.makedirs('tpn3\\TP3F')
-
-#####estoy probando,me falta todavia#####
 
 if not os.path.exists(AF_OP):   
     AL_OP = open(AF_OP, "w+b")   
