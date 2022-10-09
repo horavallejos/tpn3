@@ -630,7 +630,7 @@ def entrega_cupos():
         print()
         rOp.cod_prod=input("Ingrese el código del producto -> ")
         while rOp.cod_prod<"1" or rOp.cod_prod>str(canp):
-            rOp.cod_prod=input("Ingrese el código del producto -> ")
+            rOp.cod_prod=input("ERROR: Ingrese el código del producto -> ")
         rOp.fecha=validarFecha()
         rOp.est="P"
         AL_OP.seek(0,2)
@@ -731,9 +731,8 @@ def buscar_cupos_hoy():
     print("-------------------------------\n")
     cont=0
     while AL_OP.tell()<t:
-        pos = AL_OP.tell()
         RegOp = pickle.load(AL_OP)
-        if RegOp.fecha.strip() == hoy:
+        if RegOp.fecha.strip() == hoy and RegOp.est=="A":
             cod=int(RegOp.cod_prod)
             posp=buscaProducto_cod(cod)
             AL_PROD.seek(posp)
@@ -741,8 +740,6 @@ def buscar_cupos_hoy():
             print(f"Patente: {RegOp.pat.strip()} - Producto: {rProd.nom_prod.strip()} ")
             cont+=1
     return cont
-    # if cont==0:
-    #     print("No hay camiones para hoy")
         
 def cantidad_Rxp(prod):
     t=os.path.getsize(AF_RUBROP)
@@ -752,7 +749,7 @@ def cantidad_Rxp(prod):
     else:
         AL_RUBROP.seek(0)
         while AL_RUBROP.tell()<t:
-            rRxP=pickle.load(AL_SILOS)
+            rRxP=pickle.load(AL_RUBROP)
             if int(rRxP.cod_prod) == prod:
                 cont+=1
     return cont
@@ -805,9 +802,9 @@ def registrar_calidad():
         print("     NO HAY CAMIONES PARA HOY\n")
         os.system('pause')
     else:
-        rta=input("¿Desea registrar alguno de esos camiones? [S] para continuar - [N] para salir.").upper()
+        rta=input("¿Desea registrar alguno de esos camiones? [S] para continuar - [N] para salir. -> ").upper()
         while rta!='S' and rta!='N':
-            rta=input("¿Desea registrar alguno de esos camiones? [S] para continuar - [N] para salir.").upper()
+            rta=input("¿Desea registrar alguno de esos camiones? [S] para continuar - [N] para salir. -> ").upper()
         if rta=='S':
             #buscar_cupos_hoy()
             #os.system('cls')
@@ -818,7 +815,7 @@ def registrar_calidad():
                 pat_e = Busco_patente(pat)
                 AL_OP.seek(pat_e,0)
                 RegOp = pickle.load(AL_OP)
-                if RegOp.fecha.strip()==hoy and RegOp.est.strip()=="A":
+                if RegOp.fecha==hoy and RegOp.est=="A":
                     producto=int(RegOp.cod_prod)
                     cant_aprob=mostrar_RxP(producto)
                     cant_rxp=cantidad_Rxp(producto)
@@ -829,12 +826,14 @@ def registrar_calidad():
                         pickle.dump(RegOp,AL_OP)
                         AL_OP.flush()
                         print("\nCamión APROBADO con Calidad\n")
+                        os.system('pause')
                     else:
                         RegOp.est="R"
                         AL_OP.seek(pat_e,0)
                         pickle.dump(RegOp,AL_OP)
                         AL_OP.flush()
                         print("\nCamión RECHAZADO por baja Calidad\n")
+                        os.system('pause')
         else:
             print("\nNo se ha registrado ningún cambio\n")
             os.system('pause')
