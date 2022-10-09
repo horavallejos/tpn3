@@ -179,23 +179,24 @@ def alta_productos():
     rta='S'
     while rta=='S':
         os.system('cls')
-        pro=input("ingrese el producto [hasta 15 carcateres] :  ")
+        pro=input("ingrese el producto [hasta 15 carcateres] o Escriba SALIR, para salir sin hacer cambios -> ")
         while len(pro)<3 or len(pro)>=15:
-            pro=input("ERROR. Ingrese el producto [hasta 15 carcateres] :  ")
+            pro=input("ERROR. ingrese el producto [hasta 15 carcateres] o Escriba SALIR, para salir sin hacer cambios -> ")
         pro=pro.upper()
-        RegProd=prod()
-        if buscaProducto(pro) == -1:
-            RegProd.cod_prod=cant_prod()+1
-            RegProd.nom_prod=pro
-            RegProd.est="B"
-            AL_PROD.seek(0,2)
-            formatProd(RegProd)
-            pickle.dump(RegProd,AL_PROD)
-            AL_PROD.flush()
-            print(f"El producto {pro} fue registrado con éxito... \n ")
-        else:
-            print("El producto ya se encuentra registrado. Verifique el estado\n")
-        
+        if pro!="SALIR":
+            RegProd=prod()
+            if buscaProducto(pro) == -1:
+                RegProd.cod_prod=cant_prod()+1
+                RegProd.nom_prod=pro
+                RegProd.est="B"
+                AL_PROD.seek(0,2)
+                formatProd(RegProd)
+                pickle.dump(RegProd,AL_PROD)
+                AL_PROD.flush()
+                print(f"El producto {pro} fue registrado con éxito... \n ")
+            else:
+                print("El producto ya se encuentra registrado. Verifique el estado\n")
+                            
         rta= input("Desea ingresar otro producto? S-si   N-no: ").upper()
         while rta != "S" and rta != "N":
             rta = input("Por favor, solo S para Si o N para No:").upper()
@@ -230,8 +231,6 @@ def busco_prod_cam(x):
     else:
         ban=False
         Regop= oper()
-        #Regop=pickle.load(AL_OP)
-        
         AL_OP.seek(0)
         while AL_OP.tell() < fin and ban==False:
             Regop=pickle.load(AL_OP)
@@ -352,6 +351,7 @@ def mostrar_productos(): # MUESTRA PRODUCTOS ACTIVOS
     global AF_PROD, AL_PROD
     os.system('cls')
     t=os.path.getsize(AF_PROD)
+    cont=0
     if t==0:
         print("No hay productos para mostrar")
         os.system('pause')
@@ -363,8 +363,12 @@ def mostrar_productos(): # MUESTRA PRODUCTOS ACTIVOS
         while AL_PROD.tell()<t:
             rProd=pickle.load(AL_PROD)
             if rProd.est=="A":
+                cont+=1
                 mostrarProd(rProd)
-    os.system('pause')
+        if cont==0:
+            print("No hay productos activos")
+                
+    
 
 ############### ALTA DE RUBROS ###############
 
@@ -521,14 +525,15 @@ def alta_RxP():
 
 def cant_silos():
     t=os.path.getsize(AF_SILOS)
+    cont=0
     if t==0:
         return 0
     else:
         AL_SILOS.seek(0)
-        pickle.load(AL_SILOS)
-        aux=AL_SILOS.tell()
-        cant_reg=t//aux
-        return cant_reg
+        while AL_SILOS.tell()<t:
+            cont+=1
+            pickle.load(AL_SILOS)
+        return cont
 
 def alta_silos():
     os.system('cls')
@@ -537,6 +542,8 @@ def alta_silos():
     rta='S'
     while rta=='S':
         os.system('cls')
+        mostrar_silos_all()
+        print()
         sil=input("ingrese el Nombre del Silo [hasta 15 carcateres] :  ")
         while len(sil)<3 or len(sil)>=15:
             sil=input("ERROR. Ingrese el nombre del SILO [hasta 15 carcateres] :  ")
@@ -587,6 +594,22 @@ def buscaSilo_cod(cod):
         if int(rSilo.cod_silo) == int(cod):
             return pos
     return -1
+
+def mostrar_silos_all(): # MUESTRA TODOS LOS SILOS
+    global AF_SILOS, AL_SILOS
+    os.system('cls')
+    t=os.path.getsize(AF_SILOS)
+    if t==0:
+        print("No hay SILOS para mostrar")
+        os.system('pause')
+    else:
+        rSilo=silo()
+        print("-----------------------------------------")
+        print(" CodSilo - Nombre - CodProd - Stock  ")
+        AL_SILOS.seek(0)
+        while AL_SILOS.tell()<t:
+            rSilo=pickle.load(AL_SILOS)
+            mostrarSilo(rSilo)
 
 ############# ENTREGA DE CUPOS ####################
 
@@ -705,6 +728,8 @@ def buscar_cupos_hoy():
     t = os.path.getsize(AF_OP)
     AL_OP.seek(0)
     print(" CAMIONES HABILITADOS PARA HOY ")
+    print("-------------------------------\n")
+    cont=0
     while AL_OP.tell()<t:
         pos = AL_OP.tell()
         RegOp = pickle.load(AL_OP)
@@ -714,8 +739,23 @@ def buscar_cupos_hoy():
             AL_PROD.seek(posp)
             rProd=pickle.load(AL_PROD)
             print(f"Patente: {RegOp.pat.strip()} - Producto: {rProd.nom_prod.strip()} ")
-            return pos
-    return -1
+            cont+=1
+    return cont
+    # if cont==0:
+    #     print("No hay camiones para hoy")
+        
+def cantidad_Rxp(prod):
+    t=os.path.getsize(AF_RUBROP)
+    cont=0
+    if t==0:
+        return cont
+    else:
+        AL_RUBROP.seek(0)
+        while AL_RUBROP.tell()<t:
+            rRxP=pickle.load(AL_SILOS)
+            if int(rRxP.cod_prod) == prod:
+                cont+=1
+    return cont
 
 def mostrar_RxP(prod):
     global AF_OP, AL_OP,AF_RUBROP,AL_RUBROP, AF_RUBRO,AL_RUBRO,AF_PROD,AL_PROD
@@ -758,14 +798,17 @@ def mostrar_RxP(prod):
 def registrar_calidad():
     global AF_OP, AL_OP,AF_PROD,AL_PROD,AF_RUBRO,AL_RUBRO,AF_RUBROP,AL_RUBROP
     os.system('cls')
-    print(" OPCION 3 - REGISTRAR CALIDAD ")
+    print(" OPCION 4 - REGISTRAR CALIDAD ")
     print(" -----------------------------\n ")
     t = os.path.getsize(AF_OP)
-    if buscar_cupos_hoy()==-1:
-        print("NO HAY CAMIONES PARA HOY")
+    if buscar_cupos_hoy()==0:
+        print("     NO HAY CAMIONES PARA HOY\n")
+        os.system('pause')
     else:
-        rta='S'
-        while rta=='S':
+        rta=input("¿Desea registrar alguno de esos camiones? [S] para continuar - [N] para salir.").upper()
+        while rta!='S' and rta!='N':
+            rta=input("¿Desea registrar alguno de esos camiones? [S] para continuar - [N] para salir.").upper()
+        if rta=='S':
             #buscar_cupos_hoy()
             #os.system('cls')
             pat=validarPatente()
@@ -777,7 +820,10 @@ def registrar_calidad():
                 RegOp = pickle.load(AL_OP)
                 if RegOp.fecha.strip()==hoy and RegOp.est.strip()=="A":
                     producto=int(RegOp.cod_prod)
-                    if mostrar_RxP(producto)>=2:
+                    cant_aprob=mostrar_RxP(producto)
+                    cant_rxp=cantidad_Rxp(producto)
+                    porcen=(cant_aprob/cant_rxp)*100
+                    if porcen>=60:
                         RegOp.est="C"
                         AL_OP.seek(pat_e,0)
                         pickle.dump(RegOp,AL_OP)
@@ -789,10 +835,9 @@ def registrar_calidad():
                         pickle.dump(RegOp,AL_OP)
                         AL_OP.flush()
                         print("\nCamión RECHAZADO por baja Calidad\n")
-                
-            rta= input("Desea ingresar otra patente? S-si   N-no: ").upper()
-            while rta != "S" and rta != "N":
-                rta = input("Por favor, solo S para Si o N para No:").upper()
+        else:
+            print("\nNo se ha registrado ningún cambio\n")
+            os.system('pause')
              
 ################# 5. REGISTRAR PESO BRUTO ########################
 
@@ -1067,7 +1112,7 @@ def mostrarSilo(x):
 ################# 7. REGISTRAR TARA ########################
 
 def tara():
-    global AF_OP, AL_OP
+    global AF_OP, AL_OP,AF_SILOS,AL_SILOS
     os.system('cls')
     print(" OPCION 7 - Registrar tara ")
     print(" -----------------------------\n ")
@@ -1100,6 +1145,8 @@ def tara():
                 formatOp(RegOp)
                 pickle.dump(RegOp, AL_OP)
                 AL_OP.flush()
+                ####### CARGO SILO #######
+
                 print("\nSu tara ha sido registrada con exito. Felicitaciones!!! Ha finalizado su proceso\n")
 
             elif Busco_patente(pat)!= -1 and A == "R":
@@ -1118,6 +1165,68 @@ def tara():
 
 ################# 8. REPORTES ########################
 
+####### CUPOS OTORGADOS HISTORICAMENTE Y HOY ######
+
+def Cupos_Otorgados():
+    t=os.path.getsize(AF_OP)
+    AL_OP.seek(0)
+    RegOp = oper()
+    c=0
+    if t == 0:
+        print("No hay cupos otorgados")
+    else:
+        while AL_OP.tell() < t:
+            RegOp= pickle.load(AL_OP)
+            if RegOp.est=="A" or RegOp.est=="P" or RegOp.est=="C" or RegOp.est=="B" or RegOp.est=="R" or RegOp.est=="F":
+                c+=1
+    print(f"La cantidad de cupos otorgados fue de: {c} \n")
+
+def Cupos_Otorgados_hoy():
+    t=os.path.getsize(AF_OP)
+    AL_OP.seek(0)
+    RegOp = oper()
+    ch=0
+    if t == 0:
+        print("No hay cupos otorgados")
+    else:
+        while AL_OP.tell() < t:
+            RegOp= pickle.load(AL_OP)
+            if RegOp.fecha == hoy:
+                ch+=1
+    print(f"La cantidad de cupos otorgados para hoy {hoy} es: {ch} \n")
+
+##### CAMIONES ARRIBADOS HISTORICAMENTE Y HOY #####
+R = 0
+RH = 0
+def Arribados_hoy():
+    t=os.path.getsize(AF_OP)
+    AL_OP.seek(0)
+    RegOp = oper()
+    rh=0
+    if t == 0:
+        print("No han arribado camiones aun")
+    else:
+        while AL_OP.tell() < t:
+            RegOp= pickle.load(AL_OP)
+            if RegOp.est=="A" or RegOp.est=="C" or RegOp.est=="B" or RegOp.est=="R" or RegOp.est=="F":
+                if RegOp.fecha == hoy:
+                    rh+=1
+    print(f"La cantidad de camiones arribados hoy {hoy} fue: {rh} ")
+
+def Arribados():
+    t=os.path.getsize(AF_OP)
+    AL_OP.seek(0)
+    RegOp = oper()
+    r=0
+    if t == 0:
+        print("No han arribado camiones aun")
+    else:
+        while AL_OP.tell() < t:
+            RegOp= pickle.load(AL_OP)
+            if RegOp.est=="A" or RegOp.est=="C" or RegOp.est=="B" or RegOp.est=="R" or RegOp.est=="F":
+                r+=1
+    print(f"La cantidad total de camiones arribados fue: {r} ")
+
 def reportes():
     flag=True
     while flag==True:
@@ -1126,9 +1235,19 @@ def reportes():
         opcion=input( "\n--> Ingrese la opción que desea usar, o 0 para volver al menú anterior: \n--> " )
                 
         if opcion == "1":
+            os.system('cls')
+            print("--- CUPOS HISTORICOS OTORGADOS --- ")
+            Cupos_Otorgados()
+            print("\n--- CUPOS OTORGADOS EN EL DIA DE HOY --- ")
+            Cupos_Otorgados_hoy()
             os.system('pause')
                       
         elif opcion == "2":
+            os.system('cls')
+            print("--- CANTIDAD TOTAL DE CAMIONES --- ")
+            Arribados()
+            print("\n--- CANTIDAD TOTAL DE CAMIONES EN EL DIA DE HOY --- ")
+            Arribados_hoy()
             os.system('pause')
 
         elif opcion == "3":
@@ -1335,10 +1454,16 @@ def crud():
         elif opcion == "V" or opcion == "v":
             flag=False
 
+def head_ABM_productos():
+    print( "")
+    print("                         ##################################")
+    print("                         |         ABCM DE PRODUCTOS      |")
+    print("                         ##################################\n")
+
 def crud_productos():
     flag=True
     while flag==True:
-        
+        os.system('cls')
         menu_crud()
         opcion=input( "\n--> Ingrese la opción que desea usar, o V para volver al menú anterior: \n--> " )
         
@@ -1353,6 +1478,7 @@ def crud_productos():
         elif opcion == "C" or opcion == "c":
           
             mostrar_productos()
+            os.system('pause')
         
         elif opcion == "M" or opcion == "m":
            
@@ -1444,8 +1570,6 @@ AF_SILOS = "tpn3\\TP3F\\SILOS.DAT"
 
 if not os.path.exists('tpn3\\TP3F'):
     os.makedirs('tpn3\\TP3F')
-
-#####estoy probando,me falta todavia#####
 
 if not os.path.exists(AF_OP):   
     AL_OP = open(AF_OP, "w+b")   
