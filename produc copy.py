@@ -1561,14 +1561,14 @@ def administraciones():
 
 ################ PROGRAMA PRINCIPAL #######################
 
-AF_OP = "tpn3\\TP3F\\OPERACIONES.DAT"
-AF_PROD = "tpn3\\TP3F\\PRODUCTOS.DAT"
-AF_RUBRO = "tpn3\\TP3F\\RUBROS.DAT"
-AF_RUBROP = "tpn3\\TP3F\\RUBXPROD.DAT"
-AF_SILOS = "tpn3\\TP3F\\SILOS.DAT"
+AF_OP = "c:\\TP3F\\OPERACIONES.DAT"
+AF_PROD = "c:\\TP3F\\PRODUCTOS.DAT"
+AF_RUBRO = "c:\\TP3F\\RUBROS.DAT"
+AF_RUBROP = "c:\\TP3F\\RUBXPROD.DAT"
+AF_SILOS = "c:\\TP3F\\SILOS.DAT"
 
-if not os.path.exists('tpn3\\TP3F'):
-    os.makedirs('tpn3\\TP3F')
+if not os.path.exists('c:\\TP3F'):
+    os.makedirs('c:\\TP3F')
 
 if not os.path.exists(AF_OP):   
     AL_OP = open(AF_OP, "w+b")   
@@ -1621,7 +1621,8 @@ while flag==True:
     elif op == "8":
         reportes()
     elif op == "9":
-        silos()
+        pass
+        #silos()
         
     elif op =="0":
         flag=False
