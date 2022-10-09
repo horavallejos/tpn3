@@ -17,6 +17,7 @@ class oper:
         self.est = ""
         self.pesob = 0
         self.tara = 0
+        self.neto = 0
 
 class prod:
     def __init__(self):
@@ -52,9 +53,11 @@ def formatOp(vrOp):
     vrOp.fecha = vrOp.fecha.ljust(10)
     vrOp.est = vrOp.est.ljust(1)
     vrOp.pesob = str(vrOp.pesob)
-    vrOp.pesob = vrOp.pesob.ljust(5)
+    vrOp.pesob = vrOp.pesob.ljust(8)
     vrOp.tara = str(vrOp.tara)
-    vrOp.tara = vrOp.tara.ljust(5)
+    vrOp.tara = vrOp.tara.ljust(8)
+    vrOp.neto = str(vrOp.neto)
+    vrOp.neto = vrOp.neto.ljust(8)
 
 def formatProd(vrProd):
    vrProd.cod_prod = str(vrProd.cod_prod)
@@ -74,9 +77,9 @@ def formatRxP(vrRxP):
     vrRxP.cod_rub = str(vrRxP.cod_rub)
     vrRxP.cod_rub = vrRxP.cod_rub.ljust(2)
     vrRxP.min = str(vrRxP.min)
-    vrRxP.min = vrRxP.min.ljust(3)
+    vrRxP.min = vrRxP.min.ljust(5)
     vrRxP.max = str(vrRxP.max)
-    vrRxP.max = vrRxP.max.ljust(3)
+    vrRxP.max = vrRxP.max.ljust(5)
     
 def formatSilo(vrSilo):
     vrSilo.cod_silo = str(vrSilo.cod_silo)
@@ -85,7 +88,7 @@ def formatSilo(vrSilo):
     vrSilo.cod_prod = str(vrSilo.cod_prod)
     vrSilo.cod_prod = vrSilo.cod_prod.ljust(2)
     vrSilo.stock = str(vrSilo.stock)
-    vrSilo.stock = vrSilo.stock.ljust(5)
+    vrSilo.stock = vrSilo.stock.ljust(8)
 
 ##########################################################
 
@@ -119,7 +122,6 @@ def ApruebaRangoReal(nro, min,max):
         else:
             return False  
     
-
 def validarFecha():
   actual=datetime.today()
   actuall=datetime.strftime(actual, '%d/%m/%Y')
@@ -143,7 +145,6 @@ def validarFecha():
         return fechaa
       else:
         print("Fecha invalida")
-
 
 def cant_prod_viejo():
     t=os.path.getsize(AF_PROD)
@@ -207,6 +208,7 @@ def buscaProducto(pro):
         pos = AL_PROD.tell()
         rProd = pickle.load(AL_PROD)
         if rProd.nom_prod.strip() == pro:
+
             return pos
     return -1
 
@@ -227,8 +229,8 @@ def busco_prod_cam(x):
         return False
     else:
         ban=False
-        Regop= op()
-        Regop=pickle.load(AL_OP)
+        Regop= oper()
+        #Regop=pickle.load(AL_OP)
         
         AL_OP.seek(0)
         while AL_OP.tell() < fin and ban==False:
@@ -630,60 +632,6 @@ def validarPatente():
         f=False
         return pat
 
-# def entrega_cupos():
-#     global AF_OP, AL_OP
-#     ke="S"
-#     print("ENTREGA DE CUPOS")
-#     while ke == "S":
-#       os.system('cls')
-#       rOp=oper()
-#       rOp.pat=validarPatente() 
-#       e = Busco_p(rOp.pat)
-#       if e ==1:
-#         print("Cupo ya otorgado")  
-#       rOp.fecha=validarFecha()
-#       cantProd=cant_prod() # A esta variable le asigno la cantidad de productos que hay
-#       mostrar_productos_all()
-#       rOp.cod_prod=input("Ingrese el código del producto → ")
-#       while rOp.cod_prod<"1" or rOp.cod_prod>"7":  # y acá podés usar, en vez de "7" le pones cantProd como limite máximo de rango, por si se agregan productos
-#         rOp.cod_prod=input("Ingrese el código del producto → ")
-#       ee = Busco_pr(rOp.cod_prod)
-#       if ee==0:
-#         print("Producto no encontrado")
-#       if e!=1 and ee!=0:
-#         rOp.est="P"
-#       AL_OP.seek(0,2)
-#       formatOp(rOp)
-#       pickle.dump(rOp,AL_OP)
-#       AL_OP.flush()
-#       print(f"El cupo para {rOp.pat} fue registrado con éxito... \n ")
-#       ke=str.upper(input("Desea ingresar otro camion? S-si N-no →"))
-
-# def Busco_pr(cod):
-#     t = os.path.getsize(AF_PROD)
-#     AL_PROD.seek(0)
-#     ban=False
-#     while AL_PROD.tell()<t and ban== False:
-#         pos = AL_PROD.tell()
-#         rProd = pickle.load(AL_PROD)
-#         if int(rProd.cod_prod) == int(cod):
-#             if rProd.est == "B":
-#               rProd.est = "A"
-#     return 0
-
-# def Busco_p(pat):
-#     global AF_OP, AL_OP
-#     f = datetime.now()
-#     f = f.strftime('%d/%m/%Y')
-#     t = os.path.getsize(AF_OP)
-#     AL_OP.seek(0)
-#     while AL_OP.tell()<t:
-#         RegOp = pickle.load(AL_OP)
-#         if RegOp.pat.upper() == pat.ljust(7):
-#           if RegOp.fecha == f:
-#             return 1
-
-
 ################# 3. RECEPCION ########################
 
 
@@ -729,7 +677,7 @@ def recepcion():
                     AL_OP.seek(pat_e,0)
                     pickle.dump(RegOp, AL_OP)
                     AL_OP.flush()
-                    print("El estado de su camion ha cambiado a arribado")
+                    print("El estado de su camion ha cambiado a arribado\n")
                 
                 elif RegOp.fecha.strip()==hoy and RegOp.est.strip()=="A":
                     print(f"Su camion {RegOp.pat.strip()} ya se encuentra en estado de arribado")
@@ -864,12 +812,12 @@ def bruto():
             RegOp = pickle.load(AL_OP)
             A= RegOp.est
             if A == "C":
-                bru=input("Ingrese peso bruto: [Límite Legal Argentino= 45TN] tolerancia +5TN ")
-                while validaRangoEntero(bru,8,50):
+                bru=input("Ingrese peso bruto: [Límite Legal Argentino= 45.000 Kg] tolerancia +5000 Kg ")
+                while validaRangoEntero(bru,8000,50000):
                     bru=int(bru)
-                    if bru<8:
-                        print("El peso mínimo de un camión es de 8 TN. ")
-                    bru=input("Ingrese peso bruto: [Límite Legal Argentino= 45TN] tolerancia +5TN ")
+                    if bru<8000:
+                        print("El peso mínimo de un camión es de 8000 Kg. ")
+                    bru=input("Ingrese peso bruto: [Límite Legal Argentino= 45.000 Kg] tolerancia +5000 Kg ")
                 RegOp.pesob = bru
                 RegOp.est = "B"
                 AL_OP.seek(pat_e,0)
@@ -900,9 +848,7 @@ def archivos():
         os.system('cls')
         menu_Archivos()
         opcion=input( "\n--> Ingrese la opción que desea usar, o 0 para volver al menú anterior: \n--> " )
-        while opcion<"0" and opcion>"5":
-            opcion=input( "\n--> Ingrese la opción que desea usar, o 0 para volver al menú anterior: \n--> " )
-        
+                
         if opcion == "1":
             global AF_OP, AL_OP
             os.system('cls')
@@ -914,7 +860,7 @@ def archivos():
                 os.system('pause')
             else:
                 print("-------------------------------------------------")
-                print(" Patente CodPro Fecha     Est  PesoB   Tara   ")
+                print(" Patente CodPro Fecha     Est  PesoB   Tara   PesoN ")
                 AL_OP.seek(0)
                 while AL_OP.tell()<t:
                     rOp=pickle.load(AL_OP)
@@ -1018,11 +964,92 @@ def archivos():
                 print("\nTamaño de registro = ",aux," - Cantidad de Registros = ", cant_reg)
                 os.system('pause')
 
+        elif opcion == "6":
+            os.system('cls')
+            cantp=cant_prod()
+            print(" ---------------------------------- ")
+            print("   Patentes con menor descarga      ")
+            print(" ---------------------------------- \n")
+            for i in range(1,cantp+1):
+                if busco_prod_cam(i):
+                    posprod=buscaProducto_cod(i)
+                    AL_PROD.seek(posprod)
+                    rProd=pickle.load(AL_PROD)
+                    nomprod=rProd.nom_prod.strip()
+                    aaa=menor_patente(i)
+                    if aaa!=-1:
+                        print(f"La patente con menor descarga para {nomprod} es {aaa}\n")
+            os.system('pause')
+                    
+        elif opcion == "7":
+            alta_prov()
+
         elif opcion == "0":
             flag=False
 
+def alta_prov():
+    global AF_OP,AL_OP
+    os.system('cls')
+    print(" ALTA PROVISORIA ")
+    print(" -----------------------------\n ")
+    rta='S'
+    while rta=='S':
+        t=os.path.getsize(AF_OP)
+        if t==0:
+            rOp=oper()
+            AL_OP.seek(0)
+            rOp.pat = validarPatente()
+            rOp.cod_prod = input("Codigo Producto -> ")
+            rOp.fecha = validarFecha()
+            rOp.est = input("Ingrese estado P.A.C.B.R.F -> ").upper()
+            rOp.pesob = int(input("Ingrese peso bruto entre 8000 y 50000 ->"))
+            rOp.tara = int(input("Ingrese TARA entre 1000 y 30000 ->"))
+            rOp.neto = int(rOp.pesob-rOp.tara)
+            formatOp(rOp)
+            pickle.dump(rOp,AL_OP)
+            AL_OP.flush()
+            print(f"Operación fue registrado con éxito... \n ")
+            os.system('pause')
+        else:
+            os.system('cls')
+            rOp=oper()
+            AL_OP.seek(0,2)
+            rOp.pat = validarPatente()
+            rOp.cod_prod = input("Codigo Producto -> ")
+            rOp.fecha = validarFecha()
+            rOp.est = input("Ingrese estado P.A.C.B.R.F -> ").upper()
+            rOp.pesob = int(input("Ingrese peso bruto entre 8000 y 50000 ->"))
+            rOp.tara = int(input("Ingrese TARA entre 1000 y 30000 ->"))
+            rOp.neto = int(rOp.pesob-rOp.tara)
+            formatOp(rOp)
+            pickle.dump(rOp,AL_OP)
+            AL_OP.flush()
+            print(f"Operación fue registrado con éxito... \n ")
+            os.system('pause')
+        rta= input("Desea ingresar otro? S-si   N-no: ").upper()
+        while rta != "S" and rta != "N":
+            rta = input("Por favor, solo S para Si o N para No:").upper()
+
+def menor_patente(prod):
+    global AF_OP, AL_OP
+    t = os.path.getsize(AF_OP)
+    AL_OP.seek(0)
+    produc=prod
+    menor=100000
+    patente=""
+    while AL_OP.tell()<t:
+        pat_e = AL_OP.tell()
+        RegOp = pickle.load(AL_OP)
+        esta=RegOp.est.strip()
+        neto=int(RegOp.neto)
+        if int(RegOp.cod_prod) == produc and esta=="F":
+            if neto<menor:
+                menor=neto
+                patente=RegOp.pat.strip()
+    return patente
+
 def mostrarOp(x):
-    print(x.pat," - ",x.cod_prod," - ",x.fecha," - ",x.est," - ",x.pesob," - ",x.tara)
+    print(x.pat," - ",x.cod_prod," - ",x.fecha," - ",x.est," - ",x.pesob," - ",x.tara," - ",x.neto)
 
 def mostrarProd(x):
     print(x.cod_prod," - ",x.nom_prod," - ",x.est)
@@ -1047,10 +1074,8 @@ def tara():
     rta='S'
     while rta=='S':
         os.system('cls')
-        pat=input("Ingrese patente: ")
-        while len(pat)<6 or len(pat)>7:
-            pat=input("Error. Ingrese una patente valida: ")
-        pat=pat.upper
+        pat=validarPatente()
+        pat=pat.upper()
         RegOp= oper()
         if Busco_patente(pat) != -1:
             pat_e = Busco_patente(pat)
@@ -1058,16 +1083,24 @@ def tara():
             RegOp = pickle.load(AL_OP)
             A= RegOp.est
             B= RegOp.pesob
+
             if A == "B":
-                tara=input("Ingrese tara: ")
-                while B < tara:
-                    tara=input("Error. Su tara no puede ser superior a su peso bruto: ")
+
+                tara=input("Ingrese Tara: [Límite Legal Argentino= 30.000 Kg] tolerancia +5000 Kg ")
+                while validaRangoEntero(tara,1000,35000) and int(tara)>int(B):
+                    tara=int(tara)
+                    if tara>B:
+                        print("La tara no puede ser mayor al Peso bruto. ")
+                    tara=input("Ingrese Tara: [Límite Legal Argentino= 30.000 Kg] tolerancia +5000 Kg ")
+                tara=int(tara)
                 RegOp.tara = tara
+                RegOp.neto = tara-int(B)
                 RegOp.est = "F"
                 AL_OP.seek(pat_e,0)
+                formatOp(RegOp)
                 pickle.dump(RegOp, AL_OP)
                 AL_OP.flush()
-                print("Su tara ha sido registrada con exito. Felicitaciones!!! Ha finalizado su proceso")
+                print("\nSu tara ha sido registrada con exito. Felicitaciones!!! Ha finalizado su proceso\n")
 
             elif Busco_patente(pat)!= -1 and A == "R":
                 print("Su camion se encuentra en estado de rechazado")
@@ -1082,6 +1115,52 @@ def tara():
         rta= input("Desea ingresar otra patente? S-si   N-no: ").upper()
         while rta != "S" and rta != "N":
             rta = input("Por favor, solo S para Si o N para No:").upper()
+
+################# 8. REPORTES ########################
+
+def reportes():
+    flag=True
+    while flag==True:
+        os.system('cls')
+        menu_Reportes()
+        opcion=input( "\n--> Ingrese la opción que desea usar, o 0 para volver al menú anterior: \n--> " )
+                
+        if opcion == "1":
+            os.system('pause')
+                      
+        elif opcion == "2":
+            os.system('pause')
+
+        elif opcion == "3":
+            os.system('pause')
+
+        elif opcion == "4":
+            os.system('pause')
+
+        elif opcion == "5":
+            os.system('pause')
+
+        elif opcion == "6":
+            os.system('cls')
+            cantp=cant_prod()
+            print(" ---------------------------------- ")
+            print("   Patentes con menor descarga      ")
+            print(" ---------------------------------- \n")
+            for i in range(1,cantp+1):
+                if busco_prod_cam(i):
+                    posprod=buscaProducto_cod(i)
+                    AL_PROD.seek(posprod)
+                    rProd=pickle.load(AL_PROD)
+                    nomprod=rProd.nom_prod.strip()
+                    aaa=menor_patente(i)
+                    if aaa!=-1:
+                        print(f"La patente con menor descarga para {nomprod} es {aaa}\n")
+            os.system('pause')
+            
+
+        elif opcion == "0":
+            flag=False
+
 
 ################## PANTALLAS #####################
 
@@ -1178,6 +1257,24 @@ def menu_Archivos():
     print("                         # 3 - Rubros")
     print("                         # 4 - Rubros x Productos")
     print("                         # 5 - Silos")
+    print("                         # 6 - Menor patente")
+    print("                         # 7 - Alta provisoria")
+    print("                         # 0 - Volver al Menu Anterior")
+    print("                         ----------------------------------")
+    print("                         ##################################")
+    print("" )
+
+def menu_Reportes():
+    print( "")
+    print("                         ##################################")
+    print("                         | 8 -     MENU DE REPORTES       |")
+    print("                         ##################################")
+    print("                         # 1 - Total de Cupos Otorgados")
+    print("                         # 2 - Total Camiones Recibidos")
+    print("                         # 3 - Total Camiones por Producto")
+    print("                         # 4 - Peso Neto Total x Producto")
+    print("                         # 5 - Prom. P. Neto x Prod. x Cam")
+    print("                         # 6 - Patente Menor Descarga")
     print("                         # 0 - Volver al Menu Anterior")
     print("                         ----------------------------------")
     print("                         ##################################")
