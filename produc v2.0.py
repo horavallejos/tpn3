@@ -127,7 +127,7 @@ def validarFecha():
     actuall=datetime.strftime(actual, '%d/%m/%Y')
     flag = True
     print("La fecha a ingresar podra ser mayor o igual a la fecha de hoy")
-  
+    fla = True
     while flag:
         try:
             fech = input("Ingresa una fecha en el formato DD/MM/AAAA: -> ")
@@ -1336,7 +1336,18 @@ def camionxproducto(x):
         if int(reg.cod)==int(x):
             cont+=1
     return cont
-        
+
+def camionxproducto_finalizado(x):
+    t=os.path.getsize(AF_OP)
+    AL_OP.seek(0)
+    reg=oper()
+    cont=0
+    while AL_OP.tell()<t:
+        reg=pickle.load(AL_OP)
+        if int(reg.cod)==int(x) and reg.est=='F':
+            cont+=1
+    return cont
+
             
 def total_camionesxproducto():
     os.system('cls')
@@ -1353,7 +1364,43 @@ def total_camionesxproducto():
             nomprod=rProd.nom.strip()
             print(f"Total Camiones de {nomprod} = {cant}  ")
 
+def total_peso_neto():
+    os.system('cls')
+    print(" ---------------------------------- ")
+    print("   TOTAL PESO NETO POR PRODUCTO      ")
+    print(" ---------------------------------- \n")
+    t=os.path.getsize(AF_SILOS)
+    AL_SILOS.seek(0)
+    while AL_SILOS.tell()<t:
+        reg=pickle.load(AL_SILOS)
+        if int(reg.stock)>0:
+            stock=int(reg.stock)
+            codp=int(reg.cod_p)
+            posprod=busca_codigo(AF_PROD,AL_PROD,codp)
+            AL_PROD.seek(posprod)
+            rProd=pickle.load(AL_PROD)
+            nomprod=rProd.nom.strip()
+            print(f"Peso Neto de {nomprod} = {stock}  ")
 
+
+def peso_neto_x_camion():
+    os.system('cls')
+    print(" ---------------------------------- ")
+    print("   TOTAL PESO NETO POR PRODUCTO      ")
+    print(" ---------------------------------- \n")
+    t=os.path.getsize(AF_SILOS)
+    AL_SILOS.seek(0)
+    while AL_SILOS.tell()<t:
+        reg=pickle.load(AL_SILOS)
+        if int(reg.stock)>0:
+            stock=int(reg.stock)
+            codp=int(reg.cod_p)
+            cantcam=camionxproducto_finalizado(codp)
+            posprod=busca_codigo(AF_PROD,AL_PROD,codp)
+            AL_PROD.seek(posprod)
+            rProd=pickle.load(AL_PROD)
+            nomprod=rProd.nom.strip()
+            print(f"Peso Neto de {nomprod} por camión = {int(stock/cantcam)} Kilos/camión  ")
 
 
 ##############################################
@@ -1388,9 +1435,11 @@ def reportes():
             os.system('pause')
 
         elif opcion == "4":
+            total_peso_neto()
             os.system('pause')
 
         elif opcion == "5":
+            peso_neto_x_camion()
             os.system('pause')
 
         elif opcion == "6":
