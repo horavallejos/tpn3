@@ -1324,6 +1324,42 @@ def Arribados():
                 r+=1
     print(f"La cantidad total de camiones arribados fue: {r} ")
 
+######### CAMIONES POR PRODUCTO ##############
+
+def camionxproducto(x):
+    t=os.path.getsize(AF_OP)
+    AL_OP.seek(0)
+    reg=oper()
+    cont=0
+    while AL_OP.tell()<t:
+        reg=pickle.load(AL_OP)
+        if int(reg.cod)==int(x):
+            cont+=1
+    return cont
+        
+            
+def total_camionesxproducto():
+    os.system('cls')
+    cantp=cant_registros(AF_PROD,AL_PROD)
+    print(" ---------------------------------- ")
+    print("   Camiones por Producto      ")
+    print(" ---------------------------------- \n")
+    for i in range(1,cantp+1):
+        if camionxproducto(i)>0:
+            cant=camionxproducto(i)
+            posprod=busca_codigo(AF_PROD,AL_PROD, i)
+            AL_PROD.seek(posprod)
+            rProd=pickle.load(AL_PROD)
+            nomprod=rProd.nom.strip()
+            print(f"Total Camiones de {nomprod} = {cant}  ")
+
+
+
+
+##############################################
+
+
+
 def reportes():
     flag=True
     while flag==True:
@@ -1348,6 +1384,7 @@ def reportes():
             os.system('pause')
 
         elif opcion == "3":
+            total_camionesxproducto()
             os.system('pause')
 
         elif opcion == "4":
