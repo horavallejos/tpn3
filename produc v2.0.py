@@ -189,7 +189,7 @@ def alta_productos():
             if busca_nombre(AF_PROD,AL_PROD, pro) == -1:
                 RegProd.cod=cant_registros(AF_PROD,AL_PROD)+1
                 RegProd.nom=pro
-                RegProd.est="B"
+                RegProd.est="A"
                 AL_PROD.seek(0,2)
                 formatProd(RegProd)
                 pickle.dump(RegProd,AL_PROD)
@@ -224,7 +224,7 @@ def busca_codigo(af,al,cod):
             return pos
     return -1
 
-def busco_prod_cam(x):
+def busco_prod_cam(x,est):
     fin= os.path.getsize(AF_OP)
     if fin==0:
         return False
@@ -234,7 +234,22 @@ def busco_prod_cam(x):
         AL_OP.seek(0)
         while AL_OP.tell() < fin and ban==False:
             Regop=pickle.load(AL_OP)
-            if int(Regop.cod)==int(x):
+            if int(Regop.cod)==int(x) and Regop.est==est:
+                ban=True
+                return ban
+        return False
+
+def busco_prod_cam_editable(x):
+    fin= os.path.getsize(AF_OP)
+    if fin==0:
+        return False
+    else:
+        ban=False
+        Regop= oper()
+        AL_OP.seek(0)
+        while AL_OP.tell() < fin and ban==False:
+            Regop=pickle.load(AL_OP)
+            if int(Regop.cod)==int(x) and not Regop.est=='F' and not Regop.est=='R':
                 ban=True
                 return ban
         return False
@@ -243,21 +258,21 @@ def baja_prod():
     global AF_PROD, AL_PROD
     os.system('cls')
     t=os.path.getsize(AF_PROD)
-    if t==0:
-        print("No hay productos para Borrar")
+    if not productos_activos:
+        print("\nNo hay productos para Borrar")
         os.system('pause')
     else:
         rta='S'
         while rta=='S':
-            mostrar_productos_all()
+            mostrar_productos()
             cantp=cant_registros(AF_PROD,AL_PROD)
-            cod=input(f"Ingrese el codigo de producto a borrar o 0 para no modificar nada -> ")
-            while validaRangoEntero(cod,0,cantp):
+            cod=input(f"\nIngrese el codigo de producto a borrar o 0 para no modificar nada -> ")
+            while validaRangoEntero(cod,0,cantp) and not productos_activos_codigo(cod):
                 cod=input(f"Ingrese el codigo de producto a borrar o 0 para no modificar nada -> ")
             cod=int(cod)
             if cod!=0:
                 #Busco si ya ingresó un camión con ese producto
-                if busco_prod_cam(cod):
+                if busco_prod_cam_editable(cod):
                     print("Un camion ya ha ingresado con este producto, por lo tanto no se puede borrar.")
                 else:
 
@@ -289,13 +304,13 @@ def modifica_prod():
         while rta=='S':
             mostrar_productos_all()
             cantp=cant_registros(AF_PROD,AL_PROD)
-            cod=input(f"Ingrese el codigo de producto a Modificar o 0 para salir sin hacer cambios -> ")
-            while validaRangoEntero(cod,0,cantp):
+            cod=input(f"\nIngrese el codigo de producto a Modificar o 0 para salir sin hacer cambios -> ")
+            while validaRangoEntero(cod,0,cantp) and not productos_activos_codigo(cod):
                 cod=input(f"ERROR. Ingrese el codigo de producto a Modificar o 0 para salir sin hacer cambios  -> ")
             cod=int(cod)
             if cod!=0:
                 #Busco si ya ingresó un camión con ese producto
-                if busco_prod_cam(cod):
+                if busco_prod_cam_editable(cod):
                     print("Un camion ya ha ingresado con este producto, por lo tanto no se puede Modificar.")
                 else:
                     pos=busca_codigo(AF_PROD,AL_PROD,cod)
@@ -330,6 +345,24 @@ def modifica_prod():
                     rta = input("Por favor, solo S para Si o N para No:").upper()
             else:
                 rta="N" 
+
+def productos_activos():
+    t=os.path.getsize(AF_PROD)
+    AL_PROD.seek(0)
+    while AL_PROD.tell()<t:
+            rProd=pickle.load(AL_PROD)
+            if rProd.est=="A":
+                return True
+    return -1
+
+def productos_activos_codigo(x):
+    t=os.path.getsize(AF_PROD)
+    AL_PROD.seek(0)
+    while AL_PROD.tell()<t:
+            rProd=pickle.load(AL_PROD)
+            if int(rProd.cod)==int(x) and rProd.est=="A":
+                return True
+    return -1
 
 def mostrar_productos_all(): # MUESTRA TODOS LOS PRODUCTOS
     global AF_PROD, AL_PROD
@@ -599,10 +632,10 @@ def entrega_cupos():
 
                 else:
                     canp=cant_registros(AF_PROD,AL_PROD)
-                    mostrar_productos_all()
+                    mostrar_productos()
                     print()
                     rOp.cod=input("Ingrese el código del producto -> ")
-                    while validaRangoEntero(rOp.cod,1,canp):
+                    while validaRangoEntero(rOp.cod,1,canp) and not productos_activos():
                         rOp.cod=input("ERROR: Ingrese el código del producto -> ")
                     rOp.fecha=validarFecha()
                     rOp.est="P"
@@ -613,13 +646,14 @@ def entrega_cupos():
                     posp=busca_codigo(AF_PROD,AL_PROD,rOp.cod)
                     AL_PROD.seek(posp)
                     rProd=pickle.load(AL_PROD)
-                    AL_PROD.seek(posp)
-                    rProd.est="A"
-                    formatProd(rProd)
-                    pickle.dump(rProd,AL_PROD)
-                    AL_PROD.flush()
+                    nomprod=rProd.nom.strip()
+                    # AL_PROD.seek(posp)
+                    # rProd.est="A"
+                    # formatProd(rProd)
+                    # pickle.dump(rProd,AL_PROD)
+                    # AL_PROD.flush()
                     
-                    print(f"El CUPO para {rOp.pat}, con carga de {rProd.nom.strip()} fue registrado con éxito... \n ")
+                    print(f"El CUPO para {rOp.pat}, con carga de {nomprod} fue registrado con éxito... \n ")
                     os.system('pause')
                 
             fin=input(f"\n ¿Desea realizar otra Entrega de Cupos? [S para seguir cargando - N para salir] -> ").upper()
@@ -1040,7 +1074,8 @@ def archivos():
             print("   Patentes con menor descarga      ")
             print(" ---------------------------------- \n")
             for i in range(1,cantp+1):
-                if busco_prod_cam(i):
+                est="F"
+                if busco_prod_cam(i,est):
                     posprod=busca_codigo(AF_PROD,AL_PROD,i)
                     AL_PROD.seek(posprod)
                     rProd=pickle.load(AL_PROD)
@@ -1406,7 +1441,6 @@ def peso_neto_x_camion():
 ##############################################
 
 
-
 def reportes():
     flag=True
     while flag==True:
@@ -1449,7 +1483,8 @@ def reportes():
             print("   Patentes con menor descarga      ")
             print(" ---------------------------------- \n")
             for i in range(1,cantp+1):
-                if busco_prod_cam(i):
+                est='F'
+                if busco_prod_cam(i,est):
                     posprod=busca_codigo(AF_PROD,AL_PROD, i)
                     AL_PROD.seek(posprod)
                     rProd=pickle.load(AL_PROD)
