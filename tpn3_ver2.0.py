@@ -1137,25 +1137,29 @@ def mostrarSilo(x):
 
 def tara():
     global AF_OP, AL_OP,AF_SILOS,AL_SILOS
-    os.system('cls')
-    print(" OPCION 7 - Registrar tara ")
-    print(" -----------------------------\n ")
-    t=os.path.getsize(AF_SILOS)
-    if t==0:
-        print("Debe tener al menos UN SILO para poder usar este módulo. Use el ALTA DE SILOS del menú ADMINISTRACIÓN. ")
-        os.system('pause')
-    else:
-        est="B"
-        if buscar_cupos_hoy(est)==0:
-            print("     NO HAY CAMIONES PARA HOY\n")
+    rta='S'
+    while rta=='S':
+        os.system('cls')
+        print(" OPCION 7 - Registrar tara ")
+        print(" -----------------------------\n ")
+        t=os.path.getsize(AF_SILOS)
+        if t==0:
+            print("Debe tener al menos UN SILO para poder usar este módulo. Use el ALTA DE SILOS del menú ADMINISTRACIÓN. ")
             os.system('pause')
         else:
-            rta=input("¿Desea registrar alguno de esos camiones? [S] para continuar - [N] para salir. -> ").upper()
-            while rta!='S' and rta!='N':
-                rta=input("¿Desea registrar alguno de esos camiones? [S] para continuar - [N] para salir. -> ").upper()
-            if rta=='S':
-                while rta=='S':
-                    os.system('cls')
+                    
+            est="B" # Estado necesario para habilitar esta opción
+            
+            if buscar_cupos_hoy(est)==0:
+                print("     NO HAY CAMIONES PARA HOY\n")
+                os.system('pause')
+            
+            else:
+                rta=input("\n¿Desea registrar alguno de esos camiones? [S] para continuar - [N] para salir. -> ").upper()
+                while rta!='S' and rta!='N':
+                    rta=input("\n¿Desea registrar alguno de esos camiones? [S] para continuar - [N] para salir. -> ").upper()
+                
+                if rta=='S':
                     pat=validarPatente()
                     pat=pat.upper()
                     RegOp= oper()
@@ -1168,7 +1172,6 @@ def tara():
                         prod= RegOp.cod
 
                         if A == "B":
-
                             tara=input("Ingrese Tara: [Límite Legal Argentino= 30.000 Kg] tolerancia +5.000 Kg ")
                             while validaRangoEntero(tara,1000,35000) and int(tara)>int(B):
                                 tara=int(tara)
@@ -1179,20 +1182,13 @@ def tara():
                             RegOp.tara = tara
                             RegOp.neto = int(B)-tara
                             RegOp.est = "F"
-                            AL_OP.seek(pat_e,0)
-                            formatOp(RegOp)
-                            pickle.dump(RegOp, AL_OP)
-                            AL_OP.flush()
-                            ####### CARGO SILO #######
+                            
+                            ####### PREPARO SILOS #######
                             posExi=silo_exist(prod)
                             if posExi != -1:
                                 AL_SILOS.seek(posExi)
                                 rSilo=pickle.load(AL_SILOS)
                                 rSilo.stock=int(rSilo.stock)+int(RegOp.neto)
-                                AL_SILOS.seek(posExi)
-                                formatSilo(rSilo)
-                                pickle.dump(rSilo,AL_SILOS)
-                                AL_SILOS.flush()
                                 silo="existente"
                                 resultado="Exitoso"
                             elif posExi==-1:
@@ -1202,37 +1198,67 @@ def tara():
                                     rSiloD=pickle.load(AL_SILOS)
                                     rSiloD.cod_p=prod
                                     rSiloD.stock=int(rSiloD.stock)+int(RegOp.neto)
-                                    AL_SILOS.seek(posDis)
-                                    formatSilo(rSiloD)
-                                    pickle.dump(rSiloD,AL_SILOS)
-                                    AL_SILOS.flush()
                                     silo="disponible"
                                     resultado="Exitoso"
                                 else:
-                                    print("ALGO RARO EN SILOS. VERIFICAR")
+                                    silo="ausente"
+                                    print("No hay silos disponibles.")
                             
-
-                            print("\nSu tara ha sido registrada con exito. Felicitaciones!!! Ha finalizado su proceso\n")
-                            print(f"La patente {pat} ha descargado {RegOp.neto} kilos.\n")
+                            #### PROCEDO A CARGAR SILOS Y OPERACIONES #####
                             if silo=="existente":
-                                print(f"Se ha usado el Silo Existente Nombre= {rSilo.nom} con resultado {resultado} ")
-                            elif silo=="disponible":
-                                print(f"Se ha usado un Nuevo Silo, Nombre= {rSiloD.nom} con resultado {resultado} ")
-                            
+                                AL_SILOS.seek(posExi)
+                                formatSilo(rSilo)
+                                pickle.dump(rSilo,AL_SILOS)
+                                AL_SILOS.flush()
 
+                                AL_OP.seek(pat_e,0)
+                                formatOp(RegOp)
+                                pickle.dump(RegOp, AL_OP)
+                                AL_OP.flush()
+
+                                print("\nSu tara ha sido registrada con exito. Felicitaciones!!! Ha finalizado su proceso!!!\n")
+                                print(f"La patente {pat} ha descargado {RegOp.neto} kilos.\n")
+                                print(f"Se ha usado el Silo Existente Nombre= {rSilo.nom.strip()} con resultado {resultado} ")
+
+                            
+                            elif silo=="disponible":
+                                AL_SILOS.seek(posDis)
+                                formatSilo(rSiloD)
+                                pickle.dump(rSiloD,AL_SILOS)
+                                AL_SILOS.flush()
+
+                                AL_OP.seek(pat_e,0)
+                                formatOp(RegOp)
+                                pickle.dump(RegOp, AL_OP)
+                                AL_OP.flush()
+
+                                print("\nSu tara ha sido registrada con exito. Felicitaciones!!! Ha finalizado su proceso!!!\n")
+                                print(f"La patente {pat} ha descargado {RegOp.neto} kilos.\n")
+                                print(f"Se ha usado un Nuevo Silo, Nombre= {rSiloD.nom} con resultado {resultado} ")
+
+                            
+                            elif silo=="ausente":
+                                print(f"El camión patente {pat} NO PUEDE concluir su descarga de {RegOp.neto} kilos.")
+                                print(f"No se dispone de silos. Verificar Silos y volver para Terminar el proceso ")
+
+                    
                         elif Busco_patente(pat)!= -1 and A == "R":
                             print("Su camion se encuentra en estado de rechazado")
                         elif Busco_patente(pat)!= -1 and A =="A":
                             print("Su camion se encuentra en arribado, debe dirigirse a registrar su calidad")
                         elif Busco_patente(pat)!= -1 and A =="C":
                             print("Su camion aun no ha registrado su peso bruto")
-                        elif Busco_patente(pat) != -1 and A == "P":
+                        elif Busco_patente(pat)!= -1 and A == "P":
                             print("Su camion se encuentra en pendientes")
                     else:
                         print("La patente ingresada no ha sido encontrada")
-                    rta= input("Desea ingresar otra patente? S-si   N-no: ").upper()
-                    while rta != "S" and rta != "N":
-                        rta = input("Por favor, solo S para Si o N para No:").upper()
+            
+        if rta=='N':
+            rta='N'
+        else:
+            rta= input("Desea ingresar otra patente? S-si   N-no: ").upper()
+            while rta != "S" and rta != "N":
+                rta = input("Por favor, solo S para Si o N para No:").upper()
 
 ################# 8. REPORTES ########################
 
@@ -1656,14 +1682,14 @@ def administraciones():
 
 ################ PROGRAMA PRINCIPAL #######################
 
-AF_OP = "D:\\TP3F\\OPERACIONES.DAT"
-AF_PROD = "D:\\TP3F\\PRODUCTOS.DAT"
-AF_RUBRO = "D:\\TP3F\\RUBROS.DAT"
-AF_RUBROP = "D:\\TP3F\\RUBXPROD.DAT"
-AF_SILOS = "D:\\TP3F\\SILOS.DAT"
+AF_OP = "C:\\TP3F\\OPERACIONES.DAT"
+AF_PROD = "C:\\TP3F\\PRODUCTOS.DAT"
+AF_RUBRO = "C:\\TP3F\\RUBROS.DAT"
+AF_RUBROP = "C:\\TP3F\\RUBXPROD.DAT"
+AF_SILOS = "C:\\TP3F\\SILOS.DAT"
 
-if not os.path.exists('D:\\TP3F'):
-    os.makedirs('D:\\TP3F')
+if not os.path.exists('C:\\TP3F'):
+    os.makedirs('C:\\TP3F')
 
 if not os.path.exists(AF_OP):   
     AL_OP = open(AF_OP, "w+b")   
