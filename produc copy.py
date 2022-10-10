@@ -333,7 +333,6 @@ def modifica_prod():
 
 def mostrar_productos_all(): # MUESTRA TODOS LOS PRODUCTOS
     global AF_PROD, AL_PROD
-    os.system('cls')
     t=os.path.getsize(AF_PROD)
     if t==0:
         print("No hay productos para mostrar")
@@ -615,45 +614,75 @@ def mostrar_silos_all(): # MUESTRA TODOS LOS SILOS
 
 ################### PROVISORIO ###################
 def entrega_cupos():
-    global AF_OP, AL_OP
-    rOp=oper()
-    rOp.pat=validarPatente()
-    e=Busco_patente(rOp.pat)
-    if e!=-1:
-        print("Patente existente. CHAU no'vemo' ")
-        os.system('pause')
-        ### Acá seguiría la parte si quiero ofrecer agregar en otra fecha
+    global AF_OP, AL_OP,AF_PROD,AL_PROD
+    os.system('cls')
+    print(" ############################### ")
+    print("       ENTREGA DE CUPOS ")
+    print(" ############################### ")
+    flag=True
+    while flag:
+        rOp=oper()
+        rProd=prod()
+        if os.path.getsize(AF_PROD)==0:
+            print(f"No se pueden entregar cupos si no hay productos cargados. Cargue algún producto")
+        else:
+            rOp.pat=validarPatente()
+            if rOp.pat!="0":
+                pospat=Busco_patente(rOp.pat)
+                if pospat!=-1:
+                    print("Patente existente. CHAU no'vemo' ")
+                    os.system('pause')
+                    ### Acá seguiría la parte si quiero ofrecer agregar en otra fecha
 
-    else:
-        canp=cant_prod()
-        mostrar_productos_all()
-        print()
-        rOp.cod_prod=input("Ingrese el código del producto -> ")
-        while rOp.cod_prod<"1" or rOp.cod_prod>str(canp):
-            rOp.cod_prod=input("ERROR: Ingrese el código del producto -> ")
-        rOp.fecha=validarFecha()
-        rOp.est="P"
-        AL_OP.seek(0,2)
-        formatOp(rOp)
-        pickle.dump(rOp,AL_OP)
-        AL_OP.flush()
-        print(f"El CUPO para {rOp.pat} fue registrado con éxito... \n ")
-        os.system('pause')
+                else:
+                    canp=cant_prod()
+                    mostrar_productos_all()
+                    print()
+                    rOp.cod_prod=input("Ingrese el código del producto -> ")
+                    while rOp.cod_prod<"1" or rOp.cod_prod>str(canp):
+                        rOp.cod_prod=input("ERROR: Ingrese el código del producto -> ")
+                    posp=buscaProducto_cod(rOp.cod_prod)
+                    AL_PROD.seek(posp)
+                    rProd=pickle.load(AL_PROD)
+                    rProd.est="A"
+                    rOp.fecha=validarFecha()
+                    rOp.est="P"
+                    AL_OP.seek(0,2)
+                    formatOp(rOp)
+                    formatProd(rProd)
+                    pickle.dump(rProd,AL_PROD)
+                    pickle.dump(rOp,AL_OP)
+                    AL_PROD.flush()
+                    AL_OP.flush()
+                    print(f"El CUPO para {rOp.pat}, con carga de {rProd.nom_prod.strip()} fue registrado con éxito... \n ")
+                    os.system('pause')
+                
+            fin=input(f"\n ¿Desea realizar otra Entrega de Cupos? [S para seguir cargando - N para salir] -> ").upper()
+            if fin=="N":
+                flag=False
+            
+
 ############# TERMINA PROVISORIO #########################
 
 def validarPatente():
   f=True
   while f==True:
-    pat=str.upper(input("Ingrese patente en formato ABC123 o AB123CD:"))
-    x=len(pat)
-    if x==6:
-      if patente6.match(pat):
+    pat=str.upper(input("Ingrese patente en formato ABC123 o AB123CD [0 para cancelar la operación]: ->"))
+    if pat!="0":
+        x=len(pat)
+        if x==6:
+            if patente6.match(pat):
+                f=False
+                return pat
+        if x==7:
+            if patente7.match(pat):
+                f=False
+                return pat
+    else:
         f=False
         return pat
-    if x==7:
-      if patente7.match(pat):
-        f=False
-        return pat
+    
+    
 
 ################# 3. RECEPCION ########################
 
@@ -1044,7 +1073,7 @@ def alta_prov():
             AL_OP.seek(0)
             rOp.pat = validarPatente()
             rOp.cod_prod = input("Codigo Producto -> ")
-            rOp.fecha = validarFecha()
+            rOp.fecha = input(f"Ingrese una fecha con el formato igual a {hoy} -> ")
             rOp.est = input("Ingrese estado P.A.C.B.R.F -> ").upper()
             rOp.pesob = int(input("Ingrese peso bruto entre 8000 y 50000 ->"))
             rOp.tara = int(input("Ingrese TARA entre 1000 y 30000 ->"))
@@ -1060,7 +1089,7 @@ def alta_prov():
             AL_OP.seek(0,2)
             rOp.pat = validarPatente()
             rOp.cod_prod = input("Codigo Producto -> ")
-            rOp.fecha = validarFecha()
+            rOp.fecha = input(f"Ingrese una fecha con el formato igual a {hoy} -> ")
             rOp.est = input("Ingrese estado P.A.C.B.R.F -> ").upper()
             rOp.pesob = int(input("Ingrese peso bruto entre 8000 y 50000 ->"))
             rOp.tara = int(input("Ingrese TARA entre 1000 y 30000 ->"))
@@ -1287,6 +1316,7 @@ def menu_princ():
     print("                         ##################################")
     print("                         |   MENU PRINCIPAL EL ACOPIO     |")
     print("                         ##################################")
+    print("")
     print("                         # 1 - ADMININISTRACIONES")
     print("                         # 2 - ENTREGA DE CUPOS")
     print("                         # 3 - RECEPCION")
@@ -1295,7 +1325,8 @@ def menu_princ():
     print("                         # 6 - ARCHIVOS")
     print("                         # 7 - REGISTRAR TARA")
     print("                         # 8 - REPORTES")
-    print("                         # 9 - SILOS")
+    print("                         # 9 - SILOS Y RECHAZOS ")
+    print("")
     print("                         # 0 - FIN DEL PROGRAMA")
     print("                         ----------------------------------")
     print("                         ##################################")
@@ -1306,6 +1337,7 @@ def menu_01_administraciones():
     print("                         ##################################")
     print("                         |     MENU ADMINISTRACIONES      |")
     print("                         ##################################")
+    print("")
     print("                         # A - TITULARES")
     print("                         # B - PRODUCTOS")
     print("                         # C - RUBROS")
@@ -1313,6 +1345,7 @@ def menu_01_administraciones():
     print("                         # E - SILOS")
     print("                         # F - SUCURSALES")
     print("                         # G - PRODUCTO POR TITULAR")
+    print("")
     print("                         # V - Volver al Menu Principal")
     print("                         ----------------------------------")
     print("                         ##################################")
@@ -1323,10 +1356,12 @@ def menu_crud():
     print("                         ##################################")
     print("                         |   MENU ALTA-BAJA-CONS-MODIF    |")
     print("                         ##################################")
+    print("")
     print("                         # A - ALTA")
     print("                         # B - BAJA")
     print("                         # C - CONSULTA")
     print("                         # M - MODIFICACION")
+    print("")
     print("                         # V - Volver al Menu Anterior")
     print("                         ----------------------------------")
     print("                         ##################################")
@@ -1337,7 +1372,9 @@ def menu_crud_rubro():
     print("                         ##################################")
     print("                         |   MENU ALTA DE RUBROS          |")
     print("                         ##################################")
+    print("")
     print("                         # A - ALTA")
+    print("")
     print("                         # V - Volver al Menu Anterior")
     print("                         ----------------------------------")
     print("                         ##################################")
@@ -1348,7 +1385,9 @@ def menu_crud_rxp():
     print("                         ##################################")
     print("                         |   MENU ALTA DE RUBRO X PRODUCTO |")
     print("                         ##################################")
+    print("")
     print("                         # A - ALTA")
+    print("")
     print("                         # V - Volver al Menu Anterior")
     print("                         ----------------------------------")
     print("                         ##################################")
@@ -1359,7 +1398,9 @@ def menu_crud_silos():
     print("                         ##################################")
     print("                         |   MENU ALTA DE SILOS           |")
     print("                         ##################################")
+    print("")
     print("                         # A - ALTA")
+    print("")
     print("                         # V - Volver al Menu Anterior")
     print("                         ----------------------------------")
     print("                         ##################################")
@@ -1370,6 +1411,7 @@ def menu_Archivos():
     print("                         ##################################")
     print("                         | 6- MENU TEMP PARA VER ARCHIVOS |")
     print("                         ##################################")
+    print("")
     print("                         # 1 - Operaciones")
     print("                         # 2 - Productos")
     print("                         # 3 - Rubros")
@@ -1377,6 +1419,7 @@ def menu_Archivos():
     print("                         # 5 - Silos")
     print("                         # 6 - Menor patente")
     print("                         # 7 - Alta provisoria")
+    print("")
     print("                         # 0 - Volver al Menu Anterior")
     print("                         ----------------------------------")
     print("                         ##################################")
@@ -1387,12 +1430,28 @@ def menu_Reportes():
     print("                         ##################################")
     print("                         | 8 -     MENU DE REPORTES       |")
     print("                         ##################################")
+    print("")
     print("                         # 1 - Total de Cupos Otorgados")
     print("                         # 2 - Total Camiones Recibidos")
     print("                         # 3 - Total Camiones por Producto")
     print("                         # 4 - Peso Neto Total x Producto")
     print("                         # 5 - Prom. P. Neto x Prod. x Cam")
     print("                         # 6 - Patente Menor Descarga")
+    print("")
+    print("                         # 0 - Volver al Menu Anterior")
+    print("                         ----------------------------------")
+    print("                         ##################################")
+    print("" )
+
+def menu_Silos():
+    print( "")
+    print("                         ##################################")
+    print("                         | 9 -     SILOS Y RECHAZOS       |")
+    print("                         ##################################")
+    print("")
+    print("                         # 1 - Total de Cupos Otorgados")
+    print("                         # 2 - Total Camiones Recibidos")
+    print("")
     print("                         # 0 - Volver al Menu Anterior")
     print("                         ----------------------------------")
     print("                         ##################################")
@@ -1464,26 +1523,22 @@ def crud_productos():
     while flag==True:
         os.system('cls')
         menu_crud()
-        opcion=input( "\n--> Ingrese la opción que desea usar, o V para volver al menú anterior: \n--> " )
+        opcion=input( "\n--> Ingrese la opción que desea usar, o V para volver al menú anterior: \n--> " ).upper()
         
-        if opcion == "A" or opcion == "a":
-            
+        if opcion == "A":
             alta_productos()
                               
-        elif opcion == "B" or opcion == "b":
-           
+        elif opcion == "B":
             baja_prod()
         
-        elif opcion == "C" or opcion == "c":
-          
+        elif opcion == "C":
             mostrar_productos()
             os.system('pause')
         
-        elif opcion == "M" or opcion == "m":
-           
+        elif opcion == "M":
             modifica_prod()
         
-        elif opcion == "V" or opcion == "v":
+        elif opcion == "V":
             flag=False
 
 def crud_rubros():
@@ -1491,13 +1546,12 @@ def crud_rubros():
     while flag==True:
         
         menu_crud_rubro()
-        opcion=input( "\n--> Ingrese la opción que desea usar, o V para volver al menú anterior: \n--> " )
+        opcion=input( "\n--> Ingrese la opción que desea usar, o V para volver al menú anterior: \n--> " ).upper()
         
-        if opcion == "A" or opcion == "a":
-            
+        if opcion == "A":
             alta_rubros()
                               
-        elif opcion == "V" or opcion == "v":
+        elif opcion == "V":
             flag=False
 
 def crud_rxp():
@@ -1505,10 +1559,9 @@ def crud_rxp():
     while flag==True:
         
         menu_crud_rxp()
-        opcion=input( "\n--> Ingrese la opción que desea usar, o V para volver al menú anterior: \n--> " )
+        opcion=input( "\n--> Ingrese la opción que desea usar, o V para volver al menú anterior: \n--> " ).upper()
         
         if opcion == "A" or opcion == "a":
-            
             alta_RxP()
                               
         elif opcion == "V" or opcion == "v":
@@ -1519,13 +1572,12 @@ def crud_silos():
     while flag==True:
         
         menu_crud_silos()
-        opcion=input( "\n--> Ingrese la opción que desea usar, o V para volver al menú anterior: \n--> " )
+        opcion=input( "\n--> Ingrese la opción que desea usar, o V para volver al menú anterior: \n--> " ).upper()
         
-        if opcion == "A" or opcion == "a":
-            
+        if opcion == "A":
             alta_silos()
                               
-        elif opcion == "V" or opcion == "v":
+        elif opcion == "V":
             flag=False
 
 def administraciones():
@@ -1621,8 +1673,9 @@ while flag==True:
     elif op == "8":
         reportes()
     elif op == "9":
-        pass
-        #silos()
+        a=os.getcwd()
+        print(a)
+        os.system('pause')
         
     elif op =="0":
         flag=False
