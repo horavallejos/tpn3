@@ -7,16 +7,6 @@ import re
 patente6=re.compile("[A-Z]{3}[0-9]{3}")
 patente7=re.compile("[A-Z]{2}[0-9]{3}[A-Z]{2}")
 
-#### COLORES ####
-class c:
-    cyan = '\033[96m'
-    cyano = '\033[36m'
-    verde = '\033[92m'
-    amarillo = '\033[93m'
-    rojo = '\033[91m'
-    resetear = '\033[0m'
-    bold = '\033[1m'
-
 #### CREAMOS LOS CONSTRUCTORES ####
 
 class oper:
@@ -234,6 +224,38 @@ def busca_codigo(af,al,cod):
             return pos
     return -1
 
+def BuscaDico(af,al,Cod):
+    
+    t = os.path.getsize(af)
+    if t>0:
+        al.seek (0,0)
+        reg = pickle.load(al)
+        tamReg = AL_PROD.tell()
+        cantReg = int(os.path.getsize(af) / tamReg)
+        inferior = 0
+        superior = cantReg-1
+        medio = inferior + superior // 2
+        al.seek(medio*tamReg, 0)
+        reg= pickle.load(al)
+        if int(reg.cod)==int(Cod):
+            return medio*tamReg
+        else: 
+            while int(reg.cod)!= int(Cod) and (inferior < superior):
+
+                if int(Cod) < int(reg.cod):
+                    superior = medio - 1
+                else:
+                    inferior = medio + 1
+                medio = (inferior + superior) //2
+                al.seek(medio*tamReg, 0)
+                reg= pickle.load(al)
+                if int(reg.cod) == int(Cod):
+                    return int(medio*tamReg)
+                else:
+                    return -1
+        
+
+
 def busco_prod_cam(x,est):
     fin= os.path.getsize(AF_OP)
     if fin==0:
@@ -286,7 +308,7 @@ def baja_prod():
                     print("Un camion ya ha ingresado con este producto, por lo tanto no se puede borrar.")
                 else:
 
-                    pos=busca_codigo(AF_PROD,AL_PROD,cod)
+                    pos=BuscaDico(AF_PROD,AL_PROD,cod)
                     rPro=prod()
                     AL_PROD.seek(pos,0)
                     rPro=pickle.load(AL_PROD)
@@ -323,7 +345,7 @@ def modifica_prod():
                 if busco_prod_cam_editable(cod):
                     print("Un camion ya ha ingresado con este producto, por lo tanto no se puede Modificar.")
                 else:
-                    pos=busca_codigo(AF_PROD,AL_PROD,cod)
+                    pos=BuscaDico(AF_PROD,AL_PROD,cod)
                     rPro=prod()
                     AL_PROD.seek(pos,0)
                     rPro=pickle.load(AL_PROD)
@@ -492,7 +514,7 @@ def alta_RxP():
                 codp=input("ERROR. Ingrese el código del producto con el que quiera trabajar o 0 para cancelar -> ")
             codp=int(codp)
             if codp!=0:
-                posp=busca_codigo(AF_PROD,AL_PROD,codp)
+                posp=BuscaDico(AF_PROD,AL_PROD,codp)
                 AL_PROD.seek(posp)
                 rProd=pickle.load(AL_PROD)
                 mostrar_rubros_all()
@@ -502,7 +524,7 @@ def alta_RxP():
                     codr=input(f"Ingrese el código del Rubro con el que quieras asociar a {rProd.nom.strip()} -> ")
                 codr=int(codr)
                 if codr!=0:
-                    posr=busca_codigo(AF_RUBRO,AL_RUBRO,codr)
+                    posr=BuscaDico(AF_RUBRO,AL_RUBRO,codr)
                     AL_RUBRO.seek(posr)
                     rRub=pickle.load(AL_RUBRO)
                     if buscaRxP_cod(codp,codr):
@@ -653,7 +675,7 @@ def entrega_cupos():
                     formatOp(rOp)
                     pickle.dump(rOp,AL_OP)
                     AL_OP.flush()
-                    posp=busca_codigo(AF_PROD,AL_PROD,rOp.cod)
+                    posp=BuscaDico(AF_PROD,AL_PROD,rOp.cod)
                     AL_PROD.seek(posp)
                     rProd=pickle.load(AL_PROD)
                     nomprod=rProd.nom.strip()
@@ -723,7 +745,7 @@ def buscar_cupos_hoy(est):
         RegOp = pickle.load(AL_OP)
         if RegOp.fecha.strip() == hoy and RegOp.est==est:
             cod=int(RegOp.cod)
-            posp=busca_codigo(AF_PROD,AL_PROD,cod)
+            posp=BuscaDico(AF_PROD,AL_PROD,cod)
             AL_PROD.seek(posp)
             rProd=pickle.load(AL_PROD)
             print(f"Patente: {RegOp.pat.strip()} - Producto: {rProd.nom.strip()} ")
@@ -811,13 +833,13 @@ def mostrar_RxP(prod):
         posRxP = AL_RUBROP.tell()
         rRxP = pickle.load(AL_RUBROP)
         if int(rRxP.cod_p) == int(prod):
-            posp=busca_codigo(AF_PROD,AL_PROD,prod)
+            posp=BuscaDico(AF_PROD,AL_PROD,prod)
             AL_PROD.seek(posp)
             rProd=pickle.load(AL_PROD)
             producto=rProd.nom.strip()
             
             rub=int(rRxP.cod_r)
-            posrub=busca_codigo(AF_RUBRO,AL_RUBRO,rub)
+            posrub=BuscaDico(AF_RUBRO,AL_RUBRO,rub)
             AL_RUBRO.seek(posrub)
             rRub=pickle.load(AL_RUBRO)
             rubro=rRub.nom.strip()
@@ -1086,7 +1108,7 @@ def archivos():
             for i in range(1,cantp+1):
                 est="F"
                 if busco_prod_cam(i,est):
-                    posprod=busca_codigo(AF_PROD,AL_PROD,i)
+                    posprod=BuscaDico(AF_PROD,AL_PROD,i)
                     AL_PROD.seek(posprod)
                     rProd=pickle.load(AL_PROD)
                     nomprod=rProd.nom.strip()
@@ -1097,6 +1119,12 @@ def archivos():
                     
         elif opcion == "7":
             alta_prov()
+
+        elif opcion == "8":
+            prod=6
+            a=BuscaDico(AF_PROD,AL_PROD,prod)
+            print(a)
+            os.system('pause')
 
         elif opcion == "0":
             flag=False
@@ -1404,7 +1432,7 @@ def total_camionesxproducto():
     for i in range(1,cantp+1):
         if camionxproducto(i)>0:
             cant=camionxproducto(i)
-            posprod=busca_codigo(AF_PROD,AL_PROD, i)
+            posprod=BuscaDico(AF_PROD,AL_PROD, i)
             AL_PROD.seek(posprod)
             rProd=pickle.load(AL_PROD)
             nomprod=rProd.nom.strip()
@@ -1422,7 +1450,7 @@ def total_peso_neto():
         if int(reg.stock)>0:
             stock=int(reg.stock)
             codp=int(reg.cod_p)
-            posprod=busca_codigo(AF_PROD,AL_PROD,codp)
+            posprod=BuscaDico(AF_PROD,AL_PROD,codp)
             AL_PROD.seek(posprod)
             rProd=pickle.load(AL_PROD)
             nomprod=rProd.nom.strip()
@@ -1442,7 +1470,7 @@ def peso_neto_x_camion():
             stock=int(reg.stock)
             codp=int(reg.cod_p)
             cantcam=camionxproducto_finalizado(codp)
-            posprod=busca_codigo(AF_PROD,AL_PROD,codp)
+            posprod=BuscaDico(AF_PROD,AL_PROD,codp)
             AL_PROD.seek(posprod)
             rProd=pickle.load(AL_PROD)
             nomprod=rProd.nom.strip()
@@ -1496,7 +1524,7 @@ def reportes():
             for i in range(1,cantp+1):
                 est='F'
                 if busco_prod_cam(i,est):
-                    posprod=busca_codigo(AF_PROD,AL_PROD, i)
+                    posprod=BuscaDico(AF_PROD,AL_PROD, i)
                     AL_PROD.seek(posprod)
                     rProd=pickle.load(AL_PROD)
                     nomprod=rProd.nom.strip()
@@ -1540,7 +1568,7 @@ def mostrar_silo_stock(): # Silo con mayor stock
         nomsilo=rSilo.nom.strip()
         stock=int(rSilo.stock)
         codp=int(rSilo.cod_p)
-        posprod=busca_codigo(AF_PROD,AL_PROD,codp)
+        posprod=BuscaDico(AF_PROD,AL_PROD,codp)
         AL_PROD.seek(posprod)
         rProd=pickle.load(AL_PROD)
         nomprod=rProd.nom.strip()
@@ -1742,6 +1770,7 @@ def menu_Archivos():
     print("                         # 5 - Silos")
     print("                         # 6 - Menor patente")
     print("                         # 7 - Alta provisoria")
+    print("                         # 8 - dicotomica")
     print("")
     print("                         # 0 - Volver al Menu Anterior")
     print("                         ----------------------------------")
@@ -1936,14 +1965,14 @@ def administraciones():
 
 ################ PROGRAMA PRINCIPAL #######################
 
-AF_OP = "C:\\TP3F\\OPERACIONES.DAT"
-AF_PROD = "C:\\TP3F\\PRODUCTOS.DAT"
-AF_RUBRO = "C:\\TP3F\\RUBROS.DAT"
-AF_RUBROP = "C:\\TP3F\\RUBXPROD.DAT"
-AF_SILOS = "C:\\TP3F\\SILOS.DAT"
+AF_OP = "C:\\TF\\OPERACIONES.DAT"
+AF_PROD = "C:\\TF\\PRODUCTOS.DAT"
+AF_RUBRO = "C:\\TF\\RUBROS.DAT"
+AF_RUBROP = "C:\\TF\\RUBXPROD.DAT"
+AF_SILOS = "C:\\TF\\SILOS.DAT"
 
-if not os.path.exists('C:\\TP3F'):
-    os.makedirs('C:\\TP3F')
+if not os.path.exists('C:\\TF'):
+    os.makedirs('C:\\TF')
 
 if not os.path.exists(AF_OP):   
     AL_OP = open(AF_OP, "w+b")   
