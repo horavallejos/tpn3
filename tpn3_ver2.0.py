@@ -1295,6 +1295,7 @@ def tara():
             while rta != "S" and rta != "N":
                 rta = input("Por favor, solo S para Si o N para No:").upper()
 
+######################################################
 ################# 8. REPORTES ########################
 
 ####### CUPOS OTORGADOS HISTORICAMENTE Y HOY ######
@@ -1499,6 +1500,128 @@ def reportes():
             flag=False
 
 
+################## SILOS Y RECHAZADOS ####################
+
+def mostrar_silo_stock(): # Silo con mayor stock
+    global AF_SILOS, AL_SILOS
+    os.system('cls')
+    t=os.path.getsize(AF_SILOS)
+    if t==0:
+        print("No hay SILOS para mostrar")
+        os.system('pause')
+    else:
+        rSilo=silo()
+        print("-----------------------------------------")
+        print("       SILO CON MAYOR STOCK  ")
+        print("-----------------------------------------")
+        AL_SILOS.seek(0)
+        mayor=0
+        posmayor=0
+        while AL_SILOS.tell()<t:
+            pos=AL_SILOS.tell()
+            rSilo=pickle.load(AL_SILOS)
+            if int(rSilo.stock)>mayor:
+                mayor=int(rSilo.stock)
+                posmayor=pos
+        
+
+        AL_SILOS.seek(posmayor)
+        rSilo=pickle.load(AL_SILOS)
+        nomsilo=rSilo.nom.strip()
+        stock=int(rSilo.stock)
+        codp=int(rSilo.cod_p)
+        posprod=busca_codigo(AF_PROD,AL_PROD,codp)
+        AL_PROD.seek(posprod)
+        rProd=pickle.load(AL_PROD)
+        nomprod=rProd.nom.strip()
+        print(f"El silo con Mayor Stock se llama {nomsilo}, tiene una carga de {nomprod}, y tiene un Stock de {stock} Kg.  ")
+        os.system('pause')            
+
+def silos_():
+    flag=True
+    while flag==True:
+        os.system('cls')
+        menu_Silos()
+        opcion=input( "\n--> Ingrese la opción que desea usar, o 0 para volver al menú anterior: \n--> " )
+                
+        if opcion == "1":
+            mostrar_silo_stock()
+                      
+        elif opcion == "2":
+            patentes_rechazadas()
+
+        elif opcion == "0":
+            flag=False
+
+def validarFecha_retro():
+    actual=datetime.today()
+    actuall=datetime.strftime(actual, '%d/%m/%Y')
+    flag = True
+    print("La fecha a ingresar podra ser menor o igual a la fecha de hoy")
+    fla = True
+    while flag:
+        try:
+            fech = input("Ingresa una fecha en el formato DD/MM/AAAA: -> ")
+            fecha=datetime.strptime(fech, '%d/%m/%Y')
+            fechaa=datetime.strftime(fecha, '%d/%m/%Y')
+            fla = False
+        except ValueError:
+            print("Fecha invalida")
+        
+        if fla == False:
+            if actual > fecha:
+                flag = False
+                return fechaa
+            elif actuall == fechaa:
+                flag = False
+                return fechaa
+            else:
+                print("Fecha invalida")
+
+def cantidad_patentes_rech(fecha):
+    t=os.path.getsize(AF_OP)
+    cont=0
+    if t==0:
+        return cont
+    else:
+        AL_OP.seek(0)
+        while AL_OP.tell()<t:
+            reg=pickle.load(AL_OP)
+            fecha_reg=reg.fecha.strip()
+            if fecha_reg==fecha and reg.est=='R':
+                cont+=1
+    return cont
+
+
+def patentes_rechazadas():
+    os.system('cls')
+    cont=0
+    fecha=validarFecha_retro()
+    if cantidad_patentes_rech(fecha)>0:
+        t=os.path.getsize(AF_OP)
+        AL_OP.seek(0)
+        print("-----------------------------------------")
+        print("       PATENTES RECHAZADAS x FECHA       ")
+        print("-----------------------------------------")
+        print("   FECHA     |   PATENTE       ")
+        print("-----------------------------------------\n")
+        while AL_OP.tell()<t:
+            rOp=pickle.load(AL_OP)
+            fecha_reg=rOp.fecha
+            
+            patente=rOp.pat.strip()
+            if fecha_reg==fecha and rOp.est=='R':
+                print(f" {fecha}  -   {patente} ")
+                cont+=1
+        
+        print(f"\n Las patentes Rechazadas en la fecha {fecha} ascienden al número de {cont} ")
+        os.system('pause')
+    else:
+        print(f"No se registran patentes rechazadas para la fecha {fecha} ")
+        os.system('pause')
+
+
+
 ################## PANTALLAS #####################
 
 def menu_princ():
@@ -1639,8 +1762,8 @@ def menu_Silos():
     print("                         | 9 -     SILOS Y RECHAZOS       |")
     print("                         ##################################")
     print("")
-    print("                         # 1 - Total de Cupos Otorgados")
-    print("                         # 2 - Total Camiones Recibidos")
+    print("                         # 1 - Silo con Mayor Stock ")
+    print("                         # 2 - Patentes Rechazadas ")
     print("")
     print("                         # 0 - Volver al Menu Anterior")
     print("                         ----------------------------------")
@@ -1863,10 +1986,8 @@ while flag==True:
     elif op == "8":
         reportes()
     elif op == "9":
-        a=os.getcwd()
-        print(a)
-        os.system('pause')
-        
+        silos_()
+                
     elif op =="0":
         flag=False
         AL_OP.close()
