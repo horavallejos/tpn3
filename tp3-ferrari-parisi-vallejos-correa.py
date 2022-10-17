@@ -371,30 +371,34 @@ def modifica_prod():
                     rPro=prod()
                     AL_PROD.seek(pos,0)
                     rPro=pickle.load(AL_PROD)
-                    cambia_nom=input("Desea cambiar el nombre? [S = cambia] [N = No cambia] ").upper()
+                    cambia_nom=input("\nDesea cambiar el nombre? [S = cambia] [N = No cambia] ").upper()
                     while cambia_nom!="S" and cambia_nom!="N":
-                        cambia_nom=input("Desea cambiar el nombre? [S = cambia] [N = No cambia] ").upper()
+                        cambia_nom=input(c.amarillo+"Desea cambiar el nombre? [S = cambia] [N = No cambia] "+c.resetear).upper()
                     if cambia_nom=="S":
                         nom=input("Modifique el nombre del producto: ").upper()
                         while len(nom)<3 or len(nom)>15:
                             print(c.rojo + "ERROR. El nombre del producto debe tener entre 3 y 15 caracteres" + c.resetear)
                             nom=input()
                         rPro.nom=nom.ljust(15)
-                        
-                    cambia_est=input("Desea cambiar el estado? [S = cambia] [N = No cambia] ").upper()
-                    while cambia_est!="S" and cambia_est!="N":
-                        cambia_est=input("Desea cambiar el estado? [S = cambia] [N = No cambia] ").upper()
-                    if cambia_est=="S":
-                        if rPro.est=="A":
-                            rPro.est="B"
-                        else:
+
+                    cambia_est=""    
+                    if rPro.est=="B":
+                        cambia_est=input("\nDesea cambiar el estado? [S = cambia] [N = No cambia] ").upper()
+                        while cambia_est!="S" and cambia_est!="N":
+                            cambia_est=input(c.amarillo+"Desea cambiar el estado? [S = cambia] [N = No cambia] "+c.resetear).upper()
+                        if cambia_est=="S":
                             rPro.est="A"
-                    AL_PROD.seek(pos)
-                    pickle.dump(rPro,AL_PROD)
-                    AL_PROD.flush()
-                    print(c.verde + "Modificación existosa." + c.resetear)
-                    mostrarProd(rPro)
-                    print()
+                    
+                    if (cambia_est=="" or cambia_est=="N") and cambia_nom=='N':
+                        print(c.amarillo+f"\nNO se ha realizado cambios en el producto {rPro.nom.strip()}.\n"+c.resetear)
+                    
+                    else:
+                        AL_PROD.seek(pos)
+                        pickle.dump(rPro,AL_PROD)
+                        AL_PROD.flush()
+                        print(c.verde + "\nModificación existosa." + c.resetear)
+                        mostrarProd(rPro)
+                        print()
 
                 rta= input("Desea Modificar otro producto? S-si   N-no: ").upper()
                 while rta != "S" and rta != "N" and rta != "s" and rta!="n":
